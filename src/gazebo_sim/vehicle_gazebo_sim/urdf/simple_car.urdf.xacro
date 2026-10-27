@@ -1,0 +1,324 @@
+<?xml version="1.0"?>
+<robot name="simple_car" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find vehicle_gazebo_sim)/urdf/realsense_d435i.urdf.xacro"/>
+
+  <!-- Four fixed wheels use skid steering.  The cylinder local Z axis is the
+       axle/lateral direction, so keep longitudinal grip in mu2 while allowing
+       controlled lateral slip in mu1 for smooth in-place rotation. -->
+  <xacro:macro name="skid_wheel_contact" params="link_name">
+    <gazebo reference="${link_name}">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <fdir1>0 0 1</fdir1>
+    </gazebo>
+  </xacro:macro>
+  <xacro:skid_wheel_contact link_name="right_back_wheel"/>
+  <xacro:skid_wheel_contact link_name="left_back_wheel"/>
+  <xacro:skid_wheel_contact link_name="right_top_wheel"/>
+  <xacro:skid_wheel_contact link_name="left_top_wheel"/>
+
+  <link name="base_footprint"/>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="chassis"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+  </joint>
+
+  <link name="chassis">
+    <visual>
+      <geometry><box size="0.4 0.3 0.1"/></geometry>
+      <material name="blue"><color rgba="0.0 0.0 1.0 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><box size="0.4 0.3 0.1"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="2.0"/>
+      <inertia ixx="0.016" ixy="0.0" ixz="0.0" iyy="0.028" iyz="0.0" izz="0.041"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="chassis">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <link name="right_back_wheel">
+    <visual>
+      <geometry><cylinder length="0.05" radius="0.1"/></geometry>
+      <material name="black"><color rgba="0.0 0.0 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><cylinder length="0.05" radius="0.1"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="0.002" ixy="0.0" ixz="0.0" iyy="0.002" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="right_back_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <joint name="right_back_wheel_joint" type="continuous">
+    <parent link="chassis"/>
+    <child link="right_back_wheel"/>
+    <origin xyz="-0.13 -0.205 0.0" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="left_back_wheel">
+    <visual>
+      <geometry><cylinder length="0.05" radius="0.1"/></geometry>
+      <material name="black"><color rgba="0.0 0.0 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><cylinder length="0.05" radius="0.1"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="0.002" ixy="0.0" ixz="0.0" iyy="0.002" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="left_back_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <joint name="left_back_wheel_joint" type="continuous">
+    <parent link="chassis"/>
+    <child link="left_back_wheel"/>
+    <origin xyz="-0.13 0.205 0.0" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="right_top_wheel">
+    <visual>
+      <geometry><cylinder length="0.05" radius="0.1"/></geometry>
+      <material name="black"><color rgba="0.0 0.0 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><cylinder length="0.05" radius="0.1"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="0.002" ixy="0.0" ixz="0.0" iyy="0.002" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="right_top_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <joint name="right_top_wheel_joint" type="continuous">
+    <parent link="chassis"/>
+    <child link="right_top_wheel"/>
+    <origin xyz="0.13 -0.205 0.0" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="left_top_wheel">
+    <visual>
+      <geometry><cylinder length="0.05" radius="0.1"/></geometry>
+      <material name="black"><color rgba="0.0 0.0 0.0 1.0"/></material>
+    </visual>
+    <collision>
+      <geometry><cylinder length="0.05" radius="0.1"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="0.002" ixy="0.0" ixz="0.0" iyy="0.002" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="left_top_wheel">
+    <material>Gazebo/Black</material>
+  </gazebo>
+
+  <joint name="left_top_wheel_joint" type="continuous">
+    <parent link="chassis"/>
+    <child link="left_top_wheel"/>
+    <origin xyz="0.13 0.205 0.0" rpy="-1.5708 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- Gazebo 控制插件 -->
+  <gazebo>
+    <plugin name="gazebo_ros_skid_steer_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+
+      <num_wheel_pairs>2</num_wheel_pairs>
+
+      <left_joint>left_top_wheel_joint</left_joint>
+      <right_joint>right_top_wheel_joint</right_joint>
+
+      <left_joint>left_back_wheel_joint</left_joint>
+      <right_joint>right_back_wheel_joint</right_joint>
+
+      <!-- Physical track is 0.41 m.  Four-wheel skid steering needs a larger
+           calibrated effective track to compensate tyre scrub. -->
+      <wheel_separation>0.45</wheel_separation>
+      <wheel_separation>0.45</wheel_separation>
+      <wheel_diameter>0.20</wheel_diameter>
+      <wheel_diameter>0.20</wheel_diameter>
+      <max_wheel_torque>20</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>false</publish_odom_tf>
+      <publish_wheel_tf>false</publish_wheel_tf>
+
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+    </plugin>
+
+    <!-- Wheel-speed-dependent lateral compliance for four-wheel skid steering.
+         It permits the fore/aft tyres to scrub during a turn while retaining
+         longitudinal grip and lateral stability during straight motion. -->
+    <plugin name="gazebo_ros_wheel_slip" filename="libgazebo_ros_wheel_slip.so">
+      <wheel link_name="right_back_wheel">
+        <slip_compliance_lateral>0.10</slip_compliance_lateral>
+        <slip_compliance_longitudinal>0.0</slip_compliance_longitudinal>
+        <wheel_normal_force>10.5</wheel_normal_force>
+      </wheel>
+      <wheel link_name="left_back_wheel">
+        <slip_compliance_lateral>0.10</slip_compliance_lateral>
+        <slip_compliance_longitudinal>0.0</slip_compliance_longitudinal>
+        <wheel_normal_force>10.5</wheel_normal_force>
+      </wheel>
+      <wheel link_name="right_top_wheel">
+        <slip_compliance_lateral>0.10</slip_compliance_lateral>
+        <slip_compliance_longitudinal>0.0</slip_compliance_longitudinal>
+        <wheel_normal_force>10.5</wheel_normal_force>
+      </wheel>
+      <wheel link_name="left_top_wheel">
+        <slip_compliance_lateral>0.10</slip_compliance_lateral>
+        <slip_compliance_longitudinal>0.0</slip_compliance_longitudinal>
+        <wheel_normal_force>10.5</wheel_normal_force>
+      </wheel>
+    </plugin>
+  </gazebo>
+
+
+<!-- Mid-360 雷达传感器 -->
+  <link name="livox_frame">
+
+    <!-- 外观设置 -->
+    <visual>
+      <geometry><cylinder length="0.04" radius="0.035"/></geometry>
+      <material name="black"><color rgba="0.0 0.0 0.0 1.0"/></material>
+    </visual>
+
+    <!-- 碰撞设置 -->
+    <collision>   
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.04" radius="0.035"/>
+      </geometry>
+    </collision>
+
+    <!-- 惯性设置 -->
+    <inertial>   
+      <mass value="0.2"/>   <!-- 质量 -->
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <!-- 链接 -->
+  <joint name="livox_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="livox_frame"/>
+    <!-- Navigation extrinsic: base_footprint -> lidar = (0.24, 0, 0.30).
+         chassis is already 0.10 m above base_footprint. -->
+    <origin xyz="0.24 0 0.20" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Mid-360 重复性扫描：射线方向按 ros2_livox_simulation 的
+       mid360.csv 时序逐帧推进，而不是规则的二维栅格。 -->
+  <gazebo reference="livox_frame">
+    <sensor type="ray" name="livox_frame">
+      <pose>0 0 0 0 0 0</pose>
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+
+      <plugin name="livox_mid360_plugin" filename="libros2_livox.so">
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>100</samples>
+              <resolution>1</resolution>
+              <min_angle>0</min_angle>
+              <max_angle>6.2831852</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.126012</min_angle>
+              <max_angle>0.963247</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.1</min>
+            <max>200.0</max>
+            <resolution>0.002</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.002</stddev>
+          </noise>
+        </ray>
+        <samples>30000</samples>
+        <!-- 1.5k ODE rays per scan keeps the 10 Hz schedule on desktop CPUs
+             while uniformly preserving the Mid-360 scan sequence. -->
+        <downsample>20</downsample>
+        <!-- +X is the body-forward direction: publish azimuth -90..+90 deg. -->
+        <front_half_only>true</front_half_only>
+        <csv_file_name>$(find ros2_livox_simulation)/scan_mode/mid360.csv</csv_file_name>
+        <topic>/livox/lidar</topic>
+      </plugin>
+    </sensor>
+
+
+    <!-- imu 传感器 -->
+    <sensor name="lidar_imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>200</update_rate> <visualize>false</visualize>
+
+      <plugin name="lidar_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=/livox/imu</remapping> </ros>
+        <frame_name>livox_frame</frame_name>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+
+    </sensor>
+  </gazebo>
+
+  <!-- D435i optical center: 0.55 m above base_footprint, pitched down 25 deg. -->
+  <xacro:realsense_d435i parent="chassis">
+    <origin xyz="0.25 0 0.45" rpy="0 0.436332313 0"/>
+  </xacro:realsense_d435i>
+
+</robot>

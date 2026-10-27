@@ -1,0 +1,32 @@
+camera_extrinsic_calibrator:
+  ros__parameters:
+    calibration.enabled: true
+    calibration.use_imu: true
+    calibration.use_ground_plane_refinement: false
+    calibration.output_yaml: /tmp/gemini330l_extrinsic.yaml
+
+    # Manually measured values. x/y/yaw default to zero as requested.
+    calibration.translation_x: 0.0
+    calibration.translation_y: 0.0
+    calibration.camera_height: 0.60
+    calibration.roll: 0.0
+    calibration.pitch: 0.0
+    calibration.yaw: 0.0
+
+    calibration.imu_sample_duration: 5.0
+    calibration.min_imu_samples: 100
+    calibration.max_angular_velocity: 0.05
+    calibration.gravity_tolerance: 0.5
+
+    calibration.depth_scaling_factor: 1000.0
+    calibration.depth_min: 0.30
+    calibration.depth_max: 5.0
+    calibration.ground_max_distance: 0.05
+    calibration.ground_min_points: 500
+    calibration.ground_max_tilt_deg: 20.0
+    calibration.base_frame: base_link
+
+    # Row-major nominal rotation: x_base=z_optical, y_base=-x_optical, z_base=-y_optical.
+    calibration.nominal_optical_rotation: [0.0, 0.0, 1.0,
+                                          -1.0, 0.0, 0.0,
+                                           0.0, -1.0, 0.0]

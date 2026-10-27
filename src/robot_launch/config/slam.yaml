@@ -1,0 +1,139 @@
+common:
+  run_mode: online # 运行模式: offline=离线建图, online=在线实时
+  bag_path: /home/nhy/rosbag/mapping2024-03-12-13-08-40.bag # 离线模式读取的bag文件路径
+  map_path: /home/nhy/data/map/ # 离线模式地图保存路径
+  lidar_type: 3 # 激光雷达类型: 0=RsLidar, 1=Velodyne, 2=Livox(PointCloud2), 3=Livox(CustomMsg)
+  lidar_topic: /livox/lidar # 雷达点云ROS topic
+  lidar_frame: livox_frame # 雷达tf坐标系名称
+  lidar_odom_frame: odom # 雷达里程计tf坐标系名称
+  imu_topic: /livox/imu # IMU数据ROS topic
+  imu_frame: imu # IMU tf坐标系名称
+  odom_topic: /odom # 轮式里程计ROS topic
+  odom_frame: odom # 里程计tf坐标系名称
+  gps_topic: /gps/fix # GPS数据ROS topic
+  use_odom_tf: false # 是否使用外部odom->base_link的tf(如轮式里程计)
+  base_frame: base_link # 机器人基座tf坐标系名称
+  map_frame: map # 地图tf坐标系名称
+  use_imu: true # 是否使用IMU
+  invert_imu: false # 是否翻转IMU方向
+  use_odom: false # 是否使用轮式里程计
+  imu_need_init: true # IMU是否需要初始化(静止检测+零偏估计)
+  lidar_process_interval: 0 # 激光处理间隔帧数(0=每帧都处理)
+  use_removert: false # 是否使用Removert动态点去除
+  robot_id: 0 # 本机id(集群建图)
+  host_id: -1 # 主机id(集群建图) -1=单机模式
+  use_csm: false # 是否使用CSM(Canonical Scan Matcher)
+  use_scan_context: false # 是否使用ScanContext回环检测
+  debug: false # 是否打印调试日志
+  save_fullmap: true # 保存地图时是否拼接完整地图(含已加载部分)
+  save_utm_traj: false # 是否保存UTM轨迹文件
+  tf_offset: 0.0 # TF时间戳偏移量(秒), 适配Navigation2
+  publish_laserscan: false # 是否将点云转换为LaserScan发布
+  enable_undistort: true # 是否对点云进行运动畸变校正
+  min_point_num: 5000 # 点云最少点数阈值(少于该值丢弃)
+
+cloud_filter: # 点云滤波参数
+  filter_by_height: false # 是否按高度过滤
+  filter_height_min: -2.0 # 高度下限(米)
+  filter_height_max: 5.0 # 高度上限(米)
+  filter_by_intensity: false # 是否按强度过滤
+  filter_intensity_min: 0 # 强度下限
+  filter_intensity_max: 255 # 强度上限
+  filter_by_distance: true # 是否按距离过滤
+  filter_distance_min: 0.25 # 距离下限(米)
+  filter_distance_max: 70 # 距离上限(米)
+  downsample_method: approximate_voxel_grid # 降采样方法: voxel_grid, approximate_voxel_grid, random
+  voxel_size: 0.1 # 降采样体素大小(米)
+  random_sample_size: 60000 # 随机降采样的点数
+
+pcd_save: # 点云地图保存参数
+  save_map_path: /home/ww/Shared/map/ # 地图保存目录
+  map_name: test1 # 地图文件名(不含后缀)
+
+extrinsic: # 传感器外参
+  T_Base_Lidar: [0.16, 0, 0.25] # 激光雷达在base_link下的位置 x,y,z(米)
+  R_Base_Lidar: [0.868315625823, 0.003472056137, 0.495999918123, 0.000000000000, 0.999975500100, -0.006999942833, -0.496012070369, 0.006078159742, 0.868294352177] # 激光雷达在base_link下的旋转矩阵(3x3, 行优先)
+
+  ## Livox-mid70/mid360内置IMU, 外参近似为单位阵
+  T_IMU_Lidar: [-0.0, -0.0, 0.0] # IMU在激光雷达坐标系下的位置 x,y,z(米)
+  R_IMU_Lidar: [1, 0, 0, 0, 1, 0, 0, 0, 1] # IMU在激光雷达坐标系下的旋转矩阵(3x3, 行优先)
+
+  ## Camera外参
+  T_Base_Camera: [0.0, -0.0, 0.0] # 相机在base_link下的位置 x,y,z(米)
+  R_Base_Camera: [1, 0, 0, 0, 1, 0, 0, 0, 1] # 相机在base_link下的旋转矩阵
+
+  ## GPS外参
+  T_Base_GPS: [0.0, 0.0, 0.0] # GPS天线在base_link下的位置 x,y,z(米)
+  R_Base_GPS: [1, 0, 0, 0, 1, 0, 0, 0, 1] # GPS天线在base_link下的旋转矩阵
+
+front_end: # 前端(激光里程计)参数
+  view_cloud: false # 是否可视化点云
+  kf_distance: 1.0 # 关键帧最小平移距离(米)
+  kf_angle_deg: 20 # 关键帧最小旋转角度(度)
+  num_kfs_in_local_map: 50 # 局部地图中保留的关键帧数量
+  match_method: inc_ndt # 前端匹配方法: pcl_ndt, ndt, inc_ndt, pcl_icp, p2p_icp, p2line_icp, p2plane_icp
+
+back_end: # 后端(回环检测与全局优化)参数
+  lidar_continuous_num: 7 # 回环检测所需连续关键帧数
+  min_id_interval: 30 # 回环候选最小帧间隔
+  min_distance: 3 # 回环候选最小距离(米)
+  skip_id: 10 # 回环检测跳帧数
+  ndt_score_th: 2.5 # 回环验证NDT得分阈值
+  match_method: inc_ndt # 后端匹配方法
+  lidar_pos_noise: 0.1 # 激光里程计边位置噪声(米)
+  lidar_ang_noise: 0.5 # 激光里程计边角度噪声(度)
+  loop_pos_noise: 0.1 # 回环边位置噪声(米)
+  loop_ang_noise: 0.5 # 回环边角度噪声(度)
+
+mapping: # 地图构建与重定位参数
+  auto_relocalization: false # 是否启用自动重定位(定位模式)
+  use_filered_map: false # 是否使用滤波后的地图
+  search_grid_angle_range: 30 # 重定位角度搜索范围 [-angle_range, +angle_range](度)
+  search_grid_angle_step: 30 # 重定位角度搜索步长(度)
+  search_grid_range: 2.0 # 重定位距离搜索范围 x,y=[-range, +range](米)
+  search_grid_range_step: 2. # 重定位距离搜索步长(米)
+  search_score_th: 2.0 # 全局定位NDT得分阈值(>此值视为成功)
+
+eskf: # Error-State Kalman Filter 参数
+  gyro_var: 1e-3 # 陀螺仪测量噪声方差 (rad/s)^2
+  acce_var: 1e-3 # 加速度计测量噪声方差 (m/s^2)^2
+  bias_gyro_var: 1e-3 # 陀螺仪零偏随机游走方差
+  bias_acce_var: 1e-2 # 加速度计零偏随机游走方差
+  odom_var: 1.0 # 里程计测量噪声方差
+  measure_noise_trans: 0.01 # NDT位姿观测平移噪声(米)
+  measure_noise_angle: 0.01 # NDT位姿观测角度噪声(弧度)
+
+ndt_param: # NDT (Normal Distributions Transform) 配准参数
+  max_iteration: 10 # 最大迭代次数
+  voxel_size: 1.0 # NDT体素大小(米)
+  min_effective_pts: 10 # 最近邻点数阈值
+  min_pts_in_voxel: 5 # 每个栅格中最小点数
+  max_pts_in_voxel: 100000 # 每个栅格中最大点数
+  eps: 0.01 # 收敛判定阈值(迭代增量小于此值停止)
+  res_outlier_th: 30.0 # 异常值拒绝阈值
+  capacity: 1000000 # 缓存的体素数量
+  with_loss_function: true # 是否使用鲁棒核函数
+  search_method: nearby1 # 邻近体素搜索方法: nearby1, nearby6, nearby18, nearby26
+  loc_score_th: 2.0 # 定位NDT得分阈值
+  local_ndt_weight: 0.1 # 局部NDT配准权重
+  global_ndt_weight: 1.0 # 全局NDT配准权重
+
+icp_param: # ICP (Iterative Closest Point) 配准参数
+  max_iteration: 50 # 最大迭代次数
+  max_nn_distance: 0.2 # 最近邻最大距离(米)
+  max_line_distance: 0.1 # 线特征最大距离(米)
+  max_plane_distance: 0.05 # 面特征最大距离(米)
+  min_effective_pts: 10 # 最小有效配准点数
+  eps: 5e-4 # 收敛判定阈值
+  info_ratio: 0.02 # 信息矩阵缩放比例
+
+csm_param: # CSM (Canonical Scan Matcher) 参数
+  voxel_size: 0.3 # target分辨率(米)
+  num_keyframes_to_concatenate: 5 # 拼接的关键帧数量
+  target_upper_limit: 0.7 # target截面上限(米)
+  target_lower_limit: 0.5 # target截面下限(米)
+  source_upper_limit: 0.7 # source截面上限(米)
+  source_lower_limit: 0.5 # source截面下限(米)
+
+occupancy_grid: # 栅格地图参数
+  resolution: 0.05 # 栅格分辨率(米/像素)

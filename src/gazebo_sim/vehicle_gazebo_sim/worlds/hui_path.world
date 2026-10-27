@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="hui_path">
+    <gravity>0 0 -9.8</gravity>
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.45 0.45 0.45 1</ambient>
+      <background>0.75 0.80 0.85 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!--
+      Geometry (all dimensions in metres):
+        outer wall outside dimensions: 13.4 x 13.4
+        wall thickness:                0.2
+        clear corridor width:          3.0
+        inner wall outside dimensions: 7.0 x 7.0
+        centerline side length:        10.0
+        wall height:                   1.5
+    -->
+    <model name="hui_path_walls">
+      <static>true</static>
+
+      <link name="outer_north">
+        <pose>0 6.6 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>13.4 0.2 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>13.4 0.2 1.5</size></box></geometry><material><ambient>0.72 0.72 0.72 1</ambient><diffuse>0.82 0.82 0.82 1</diffuse></material></visual>
+      </link>
+      <link name="outer_south">
+        <pose>0 -6.6 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>13.4 0.2 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>13.4 0.2 1.5</size></box></geometry><material><ambient>0.72 0.72 0.72 1</ambient><diffuse>0.82 0.82 0.82 1</diffuse></material></visual>
+      </link>
+      <link name="outer_east">
+        <pose>6.6 0 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.2 13.0 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.2 13.0 1.5</size></box></geometry><material><ambient>0.72 0.72 0.72 1</ambient><diffuse>0.82 0.82 0.82 1</diffuse></material></visual>
+      </link>
+      <link name="outer_west">
+        <pose>-6.6 0 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.2 13.0 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.2 13.0 1.5</size></box></geometry><material><ambient>0.72 0.72 0.72 1</ambient><diffuse>0.82 0.82 0.82 1</diffuse></material></visual>
+      </link>
+
+      <link name="inner_north">
+        <pose>0 3.4 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>7.0 0.2 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>7.0 0.2 1.5</size></box></geometry><material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.65 0.68 0.72 1</diffuse></material></visual>
+      </link>
+      <link name="inner_south">
+        <pose>0 -3.4 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>7.0 0.2 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>7.0 0.2 1.5</size></box></geometry><material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.65 0.68 0.72 1</diffuse></material></visual>
+      </link>
+      <link name="inner_east">
+        <pose>3.4 0 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.2 6.6 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.2 6.6 1.5</size></box></geometry><material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.65 0.68 0.72 1</diffuse></material></visual>
+      </link>
+      <link name="inner_west">
+        <pose>-3.4 0 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.2 6.6 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.2 6.6 1.5</size></box></geometry><material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.65 0.68 0.72 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- Darker visual surface marks the 3 m-wide driveable ring. -->
+    <model name="hui_path_surface">
+      <static>true</static>
+      <link name="surface">
+        <visual name="north"><pose>0 5.0 0.006 0 0 0</pose><geometry><box><size>13.0 3.0 0.01</size></box></geometry><material><ambient>0.18 0.20 0.22 1</ambient><diffuse>0.24 0.27 0.30 1</diffuse></material></visual>
+        <visual name="south"><pose>0 -5.0 0.006 0 0 0</pose><geometry><box><size>13.0 3.0 0.01</size></box></geometry><material><ambient>0.18 0.20 0.22 1</ambient><diffuse>0.24 0.27 0.30 1</diffuse></material></visual>
+        <visual name="east"><pose>5.0 0 0.006 0 0 0</pose><geometry><box><size>3.0 7.0 0.01</size></box></geometry><material><ambient>0.18 0.20 0.22 1</ambient><diffuse>0.24 0.27 0.30 1</diffuse></material></visual>
+        <visual name="west"><pose>-5.0 0 0.006 0 0 0</pose><geometry><box><size>3.0 7.0 0.01</size></box></geometry><material><ambient>0.18 0.20 0.22 1</ambient><diffuse>0.24 0.27 0.30 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <gui fullscreen="0">
+      <camera name="overview">
+        <pose>12 -14 14 0 0.62 2.35</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+  </world>
+</sdf>

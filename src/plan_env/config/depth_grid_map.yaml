@@ -1,0 +1,93 @@
+/**:
+  ros__parameters:
+    # semantic_only: model boundary; depth_only: depth obstacles; fused: both.
+    perception.mode: fused
+
+plan_env_drivable_inference:
+  ros__parameters:
+    # TwinLiteNetPlus inference input and output topics.
+    topics.color_image: /camera/color/image_raw
+    topics.drivable_probability: /twinlitenet/drivable_probability
+    topics.drivable_mask: /twinlitenet/drivable_mask
+    topics.lane_probability: /twinlitenet/lane_probability
+    topics.lane_mask: /twinlitenet/lane_mask
+
+    output.publish_probability: false
+    output.publish_mask: true
+    output.mask_threshold: 0.65
+
+    # Optional TwinLiteNetPlus lane-line decoder. It is not loaded when disabled.
+    lane.enabled: false
+    lane.publish_probability: false
+    lane.publish_mask: true
+    lane.mask_threshold: 0.50
+
+    # Set reliable for cameras whose image publisher uses RELIABLE QoS.
+    input_qos.reliability: best_effort
+    input_qos.depth: 1
+
+    watchdog.enabled: true
+    watchdog.input_timeout_sec: 3.0
+    watchdog.processing_timeout_sec: 10.0
+    watchdog.check_period_sec: 1.0
+
+    # Debug image: green drivable area and, when enabled, red lane lines.
+    # No debug publisher or overlay processing is created when disabled.
+    debug.enabled: true
+    debug.image_topic: /twinlitenet/segmentation
+
+grid_map_node:
+  ros__parameters:
+    # Aligned depth/color inputs, mono8 semantic mask, and camera pose.
+    topics.depth_image: /camera/depth/image_raw
+    topics.camera_info: /camera/color/camera_info
+    topics.drivable_mask: /twinlitenet/drivable_mask
+    topics.depth_costmap: /grid_map/depth_costmap
+    topics.boundary_costmap: /grid_map/drivable_boundary_costmap
+    topics.boundary_cloud: /grid_map/drivable_boundary_cloud
+    topics.fused_costmap: /grid_map/fused_costmap
+    # All modes are single-frame and expressed in this fixed robot frame.
+    mapping.frame_id: base_link
+
+    grid_map.resolution: 0.10
+    grid_map.size_x: 20.0
+    grid_map.size_y: 20.0
+    grid_map.size_z: 5.0
+
+    # Fallback only; aligned color CameraInfo updates these values at runtime.
+    grid_map.fx: 386.0
+    grid_map.fy: 386.0
+    grid_map.cx: 320.0
+    grid_map.cy: 240.0
+    grid_map.depth_filter_maxdist: 8.0
+    grid_map.depth_filter_mindist: 0.20
+    grid_map.depth_filter_margin: 4
+    grid_map.k_depth_scaling_factor: 1000.0
+    grid_map.skip_pixel: 4
+
+    grid_map.max_ray_length: 8.0
+    grid_map.vis_height: 3.0
+    grid_map.ground_height: -1.0
+
+    # Row-major T_base_camera_optical. Initial height is 0.60 m; x/y/yaw are zero.
+    grid_map.need_extrinsic: true
+    grid_map.depth_extrinsic: [0.0, 0.0, 1.0, 0.0,
+                              -1.0, 0.0, 0.0, 0.0,
+                               0.0, -1.0, 0.0, 0.60,
+                               0.0, 0.0, 0.0, 1.0]
+
+    semantic.ground_height: 0.0
+    semantic.ground_tolerance: 0.25
+    boundary.max_forward_distance: 6.0
+    boundary.near_ignore_distance: 0.50
+    boundary.center_ignore_half_width: 0.40
+    boundary.pixel_step: 4
+    boundary.min_component_area: 1000
+    boundary.depth_window_size: 5
+    boundary.max_neighbor_jump: 0.75
+    boundary.seed_roi_width_ratio: 0.25
+    boundary.seed_roi_height_ratio: 0.15
+    boundary.use_ground_plane_fallback: true
+    boundary.publish_debug_cloud: true
+    projection.obstacle_min_height: 0.10
+    projection.obstacle_max_height: 1.50

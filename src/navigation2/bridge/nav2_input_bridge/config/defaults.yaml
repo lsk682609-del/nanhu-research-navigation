@@ -1,0 +1,14 @@
+nav2_input_bridge:
+  ros__parameters:
+    use_sim_time: false
+
+    local_odom_topic: "/mavros/local_position/odom"
+    reference_latitude: 0.0
+    reference_longitude: 0.0
+    reference_altitude: 0.0
+    goal_input_topic: "/gp_goal"
+    goal_output_topic: "/goal_pose"
+    goal_output_frame: "map"
+
+    require_nav_sat_fix: true
+    goal_yaw_from_bearing: false

@@ -1,0 +1,12 @@
+{
+  "host": "192.168.43.6",
+  "username": "root",
+  "password": "3588",
+  "port": 22,
+  "remote_dir": "/root/jky_car8",
+  "loc_script": "/root/jky_car8/nanhu-huibo-slam/run.sh",
+  "nav_script": "/root/jky_car8/nav/scripts/3588_launch.sh",
+  "state_dir": "/root/jky_car8/log",
+  "log_dir": "/root/jky_car8/log",
+  "connect_timeout": 10
+}

@@ -1,0 +1,17 @@
+# colcon 构建产物（含 src/gazebo_sim 下的嵌套工作区）
+build/
+install/
+log/
+
+# 运行输出
+logs/
+snn_runs/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 编辑器/系统
+.vscode/
+.idea/
+.DS_Store

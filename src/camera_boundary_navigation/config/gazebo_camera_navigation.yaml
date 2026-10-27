@@ -1,0 +1,64 @@
+# Gazebo Classic vehicle_gazebo_sim 专用参数覆盖。
+# 本文件与各包的基础参数文件按顺序共同加载，只保存仿真差异。
+
+depth_cloud_projector_node:
+  ros__parameters:
+    input_mode: "raw"
+    input_depth_topic: "/camera/depth/image_raw"
+    output_cloud_topic: "/depth/points"
+    output_frame: "camera_color_optical_frame"
+    camera:
+      # 与vehicle_gazebo_sim中的深度相机保持一致：1280x720，
+      # horizontal_fov=1.2112585rad。深度图已注册到彩色相机光轴。
+      width: 1280
+      height: 720
+      fx: 924.2773806188661
+      fy: 924.2773806188661
+      cx: 640.5
+      cy: 360.5
+      # Gazebo的32FC1深度图已使用米；该值仅影响16位深度输入。
+      depth_scale: 0.001
+    filter:
+      min_depth: 0.2
+      max_depth: 10.0
+      # 1280x720按2倍像素步长处理，兼顾地形栅格密度与计算开销。
+      pixel_step: 2
+
+traversability_obstacle_cloud_node:
+  ros__parameters:
+    input_cloud_topic: "/depth/points"
+    # 纯视觉仿真使用固定安装外参，不依赖Gazebo IMU。
+    require_imu: false
+    cloud_is_optical: true
+    cloud_extrinsic:
+      # 相对base_footprint：前方0.25m、高0.55m、向下俯视25度。
+      x: 0.25
+      y: 0.0
+      z: 0.55
+      roll_deg: 0.0
+      pitch_deg: 25.0
+      yaw_deg: 0.0
+    color_camera:
+      # Gazebo中深度和彩色图使用相同分辨率、视场角和光轴。
+      fx: 924.2773806188661
+      fy: 924.2773806188661
+      cx: 640.5
+      cy: 360.5
+    boundary:
+      fov_filter:
+        width: 1280
+        fx: 924.2773806188661
+        cx: 640.5
+
+camera_boundary_navigation_node:
+  ros__parameters:
+    # 使用适配器已过滤、平滑后的边界及去噪障碍。
+    boundary_topic: "/traversability/costmap/boundary_constraints"
+    obstacle_topic: "/traversability/costmap/depth_obstacles"
+    control:
+      # 仿真直线目标及上限；曲率、障碍净距、可见弧长和制动检查仍可降速。
+      nominal_linear_velocity: 0.5
+      maximum_linear_velocity: 0.5
+    # vehicle_gazebo_sim默认以10Hz发布/clock，相机帧可能超前当前ROS时钟约0.08s。
+    safety:
+      future_tolerance: 0.10

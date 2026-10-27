@@ -1,0 +1,107 @@
+/**:
+  ros__parameters:
+    # semantic_only: model boundary; depth_only: depth obstacles; fused: both.
+    perception.mode: fused
+
+plan_env_drivable_inference:
+  ros__parameters:
+    # RealSense D435 color stream (verified at 640x480, 30 Hz, rgb8).
+    topics.color_image: /camera/camera/color/image_raw
+    topics.drivable_probability: /twinlitenet/drivable_probability
+    topics.drivable_mask: /twinlitenet/drivable_mask
+    topics.lane_probability: /twinlitenet/lane_probability
+    topics.lane_mask: /twinlitenet/lane_mask
+
+    # Boundary mode only needs mono8 mask. Disable the 32FC1 image to save bandwidth.
+    output.publish_probability: false
+    output.publish_mask: true
+    output.mask_threshold: 0.65
+
+    # Enable for lane-line inference; disabled avoids loading/running that decoder.
+    lane.enabled: false
+    lane.publish_probability: false
+    lane.publish_mask: true
+    lane.mask_threshold: 0.50
+
+    # Match the live D435 color publisher: RELIABLE + KEEP_LAST(1).
+    input_qos.reliability: reliable
+    input_qos.depth: 1
+
+    # Recreate the image subscription if DDS discovery remains but images stop arriving.
+    watchdog.enabled: true
+    watchdog.input_timeout_sec: 3.0
+    watchdog.processing_timeout_sec: 10.0
+    watchdog.check_period_sec: 1.0
+
+    debug.enabled: true
+    debug.image_topic: /twinlitenet/segmentation
+
+grid_map_node:
+  ros__parameters:
+    # align_depth.enable=true: depth and color share camera_color_optical_frame.
+    topics.depth_image: /camera/camera/aligned_depth_to_color/image_raw
+    topics.camera_info: /camera/camera/color/camera_info
+    topics.drivable_mask: /twinlitenet/drivable_mask
+    topics.depth_costmap: /grid_map/depth_costmap
+    topics.boundary_costmap: /grid_map/drivable_boundary_costmap
+    topics.boundary_cloud: /grid_map/drivable_boundary_cloud
+    topics.fused_costmap: /grid_map/fused_costmap
+    mapping.frame_id: base_link
+
+    grid_map.resolution: 0.10
+    grid_map.size_x: 20.0
+    grid_map.size_y: 20.0
+    grid_map.size_z: 5.0
+
+    # Measured from /camera/camera/color/camera_info at 640x480.
+    # Runtime CameraInfo remains authoritative and updates these values.
+    grid_map.fx: 606.1953735351562
+    grid_map.fy: 605.8788452148438
+    grid_map.cx: 322.5950927734375
+    grid_map.cy: 254.49050903320312
+    # 原始深度距离过滤,只保留深度信息为depth_filter_mindist < d < depth_filter_maxdist的深度点云
+    grid_map.depth_filter_maxdist: 8.0
+    grid_map.depth_filter_mindist: 0.20
+    grid_map.depth_filter_margin: 4
+    # D435 aligned depth is 16UC1 in millimetres.
+    grid_map.k_depth_scaling_factor: 1000.0
+    grid_map.skip_pixel: 4
+
+    grid_map.max_ray_length: 8.0
+    grid_map.vis_height: 3.0
+    grid_map.ground_height: -1.0
+
+    # Row-major T_base_camera_color_optical.
+    # Rotation and the small color-sensor offset come from the live D435 TF.
+    # Assumption pending physical measurement: camera_link is mounted at
+    # base_link x=0, y=0, z=0.60 m with zero roll/pitch/yaw.
+    grid_map.need_extrinsic: true
+    grid_map.depth_extrinsic: [ 0.00231250, -0.00325055,  0.99999204, -0.00017977,
+                               -0.99991635,  0.01271838,  0.00235367,  0.01469776,
+                               -0.01272593, -0.99991383, -0.00322087,  0.60024812,
+                                0.0,         0.0,         0.0,         1.0]
+
+    # 实际地面在输出坐标系中的参考高度
+    semantic.ground_height: 0.0
+    # 边界深度点允许偏离地面的高度
+    semantic.ground_tolerance: 0.25
+
+    # 只提取与图像底部中心连通的可通行域的左、右、前边界。
+    # 所有边界在二维栅格中直接画为单栅格宽，不构造三维墙，也不膨胀。
+    boundary.max_forward_distance: 6.0
+    boundary.near_ignore_distance: 0.50
+    boundary.center_ignore_half_width: 0.40
+    boundary.pixel_step: 4
+    boundary.min_component_area: 1000
+    boundary.depth_window_size: 5
+    boundary.max_neighbor_jump: 0.75
+    boundary.seed_roi_width_ratio: 0.25
+    boundary.seed_roi_height_ratio: 0.15
+    boundary.use_ground_plane_fallback: true
+    boundary.publish_debug_cloud: true
+    # 基于base_link坐标系
+    # 最小障碍物高度为 semantic.ground_height + projection.obstacle_min_height
+    # 最大障碍高度为 semantic.ground_height + projection.obstacle_max_height
+    # 该范围内的占据体素才会投影到costmap中
+    projection.obstacle_min_height: 0.10
+    projection.obstacle_max_height: 1.50

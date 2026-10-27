@@ -1,0 +1,10 @@
+<class_libraries>
+    <library path="nav2_a_star_rpp">
+        <class type="nav2_a_star_rpp::RegulatedPurePursuitController" base_class_type="nav2_core::Controller">
+            <description>
+                nav2_a_star_rpp
+            </description>
+        </class>
+    </library>
+</class_libraries>
+

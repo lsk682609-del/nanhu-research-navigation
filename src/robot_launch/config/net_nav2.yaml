@@ -1,0 +1,221 @@
+
+base_to_livox_tf:
+  ros__parameters:
+    use_sim_time: true
+
+base_to_odom_tf:
+  ros__parameters:
+    use_sim_time: true
+
+nav2_log_record:
+  ros__parameters:
+    log_output: both
+    log_level: info
+
+net_planner_action_server:
+  ros__parameters:
+    use_sim_time: true
+    topo_map_path: "/home/ww/Robot/docker/ros2_sim/map/500x500.yaml"
+    global_frame: map
+    robot_base_frame: base_link
+    max_snap_distance: 15.0
+    transform_tolerance: 0.5
+    dense_path_step: 0.1
+    max_dense_path_length: 0.0
+    publish_planner_path: true
+    planner_path_topic: topology_plan
+
+net_navigator:
+  ros__parameters:
+    use_sim_time: true
+    global_frame: map
+    robot_base_frame: base_link
+    goal_match_tolerance: 0.05
+    controller_id: FollowPath
+    goal_checker_id: general_goal_checker
+    follow_path_action: /follow_path
+    compute_path_action: /compute_path_to_pose
+    follow_slice_horizon_m: 30.0
+    enable_controller_slice_freeze: true
+    freeze_slice_topic: /controller_server/global_path_slice_freeze
+    executing_freq_hz: 1.0
+
+controller_server:
+  ros__parameters:
+    use_sim_time: true
+    # std_msgs/Bool true => publish zero cmd_vel
+    cmd_vel_pause_topic: "/pause"
+    odom_topic: /odom
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.02
+    min_y_velocity_threshold: 0.02
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 5.0
+    progress_checker_plugin: "progress_checker"
+    current_goal_checker: "general_goal_checker"
+    goal_checker_plugins: ["general_goal_checker"]
+    controller_plugins: ["FollowPath"]
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.1
+      movement_time_allowance: 10.0
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.2
+    FollowPath:
+      plugin: "nav2_a_star_rpp::RegulatedPurePursuitController"
+
+      # —— pre瞄点 ——
+      lookahead_distance: 1.0              # pre瞄距离
+      min_lookahead_distance: 0.5          # 最小pre瞄距离（速度缩放时）
+      max_lookahead_distance: 2.0          # 最大pre瞄距离（速度缩放时）
+      lookahead_time: 1.5                  # 速度缩放pre瞄时间窗口
+      use_velocity_scaled_lookahead_distance: true  # 速度缩放pre瞄距离
+      use_interpolation: true              # pre瞄点插值
+
+      # —— 速度指令 ——
+      desired_linear_vel: 0.5              # 期望线速度
+      min_linear_vel: 0.1                  # 最小线速度
+      max_linear_vel: 0.6                  # 最大线速度
+      max_angular_vel: 1.2                 # 最大角速度
+      min_angular_vel: 0.0                 # 最小角速度
+      acc_lim_linear: 0.8                  # 线性加速度限制
+      acc_lim_angular: 1.5                 # 角加速度限制
+      regulate_linear_vel: true            # 启用速度加速度限制
+
+      # —— 弯道减速 ——
+      use_regulated_linear_velocity_scaling: true        # 弯道曲率减速开关
+      regulated_linear_scaling_min_radius: 3.0           # 触发减速的转弯半径阈值
+      regulated_linear_scaling_min_speed: 0.25           # 弯道减速后的最低线速
+
+      # —— 障碍物降速 ——
+      use_cost_regulated_linear_velocity_scaling: true   # 障碍物距离降速开关
+      cost_scaling_dist: 0.6                # 触发降速的障碍物距离
+      cost_scaling_gain: 1.0                # 降速比例（≤1.0，值越小降得越狠）
+      inflation_cost_scaling_factor: 3.0    # 膨胀层代价值系数
+      lethal_cost: 252                     # Theta* 绕障代价阈值，越小越保守
+
+      # —— 靠近终点减速 ——
+      min_approach_linear_velocity: 0.05    # 靠近终点时的最低线速
+      approach_velocity_scaling_dist: 0.6   # 靠近终点减速起始距离
+
+      # —— 碰撞检测 ——
+      use_collision_detection: true         # 碰撞检测开关
+      max_allowed_time_to_collision_up_to_carrot: 1.0  # 碰撞投影时间上限
+
+      # —— 原地转向 ——
+      use_rotate_to_heading: true           # 原地对准路径/目标朝向
+      rotate_to_heading_angular_vel: 1.8    # 转向角速度
+      rotate_to_heading_min_angle: 0.785    # 触发转向的最小角度差
+      max_angular_accel: 3.2                # 最大角加速度
+
+      # —— 目标判定 ——
+      xy_goal_tolerance: 0.05               # xy方向目标容差
+      yaw_goal_tolerance: 0.05              # 偏航角目标容差
+
+      # —— 其他 ——
+      allow_backward: false                 # 是否允许倒车
+      transform_tolerance: 0.1              # TF变换容忍时间
+      max_robot_pose_search_dist: 10.0      # 搜索最近路径点的最大距离
+
+      # —— polyline / freeze ——
+      prefer_planner_polyline_when_clear: true
+      polyline_collision_check_resolution: 0.05
+      polyline_track_max_length: 15.0
+      publish_global_path_slice_freeze: true
+      publish_merge_connection_point: true
+
+controller_server_rclcpp_node:
+  ros__parameters:
+    use_sim_time: true
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      update_frequency: 20.0
+      publish_frequency: 5.0
+      global_frame: map
+      robot_base_frame: base_link
+      use_sim_time: false
+      rolling_window: true
+      width: 10
+      height: 10
+      resolution: 0.05
+      footprint: "[ [0.35, 0.3], [0.35, -0.3], [-0.35, -0.3], [-0.35, 0.3] ]"
+      plugins: ["obstacle_layer", "inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        clear_before_update: false
+        observation_sources: pointcloud
+        min_obstacle_height: -100.0
+        max_obstacle_height: 100.0
+        pointcloud:
+          topic: /cur_lid
+          obstacle_range: 7.1
+          raytrace_range: 7.1
+          min_obstacle_height: 0.2
+          max_obstacle_height: 0.65
+          clearing: true
+          marking: true
+          inf_is_valid: true
+          data_type: "PointCloud2"
+          observation_keep_time: 0.0
+      temporal_layer:
+        plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+        voxel_decay: 0.5  # seconds for a full decay
+        decay_model: 0   # 0=linear, 1=exponential
+        voxel_size: 0.1  # meters
+        track_unknown_space: false
+        observation_sources: pointcloud
+        pointcloud:  # This name must match the topic name
+          topic: /cur_lid
+          max_obstacle_height: 1.0
+          min_obstacle_height: 0.3
+          obstacle_range: 7.1
+          raytrace_range: 7.1
+          clearing: true
+          marking: true
+          inf_is_valid: true
+          data_type: "PointCloud2"
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true                     # 是否启用膨胀层
+        inflation_radius: 1.0             # 膨胀半径 (m)，障碍物外扩距离
+        cost_scaling_factor: 5.0          # 代价衰减系数，值越大衰减越快
+        inflate_unknown: false            # 是否对未知区域（灰色）膨胀
+        inflate_around_unknown: false     # 是否对未知区域周围膨胀
+      always_send_full_costmap: true
+  local_costmap_client:
+    ros__parameters:
+      use_sim_time: false
+  local_costmap_rclcpp_node:
+    ros__parameters:
+      use_sim_time: false
+
+lifecycle_manager_navigation:
+  ros__parameters:
+    use_sim_time: true
+    autostart: true
+    bond_timeout: 10.0
+    node_names: [ 'nav2_log_record', 'controller_server', 'net_navigator']
+
+nav2_input_bridge:
+  ros__parameters:
+    use_sim_time: false
+    local_odom_topic: "/mavros/local_position/odom"
+    reference_latitude: 30.8135718
+    reference_longitude: 120.8338169
+    reference_altitude: 12.318126322268082
+    #reference_latitude: 30.7939518
+    #reference_longitude: 120.8104288
+    #reference_altitude: 12.07629405266946
+    goal_input_topic: "/gp_goal"
+    uav_goal_input_topic: "/uav/target_gps"
+    target_detected_topic: "/target_detected"
+    goal_output_topic: "/goal_pose"
+    goal_output_frame: "map"
+    require_nav_sat_fix: true
+    goal_yaw_from_bearing: false

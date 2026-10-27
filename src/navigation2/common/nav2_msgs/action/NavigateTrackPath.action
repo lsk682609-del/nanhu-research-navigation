@@ -1,0 +1,16 @@
+# Copyright 2026
+# Author: Wei Wang -> shaxikai@outlook.com
+#
+# Goal: provide a path to follow
+nav_msgs/Path path
+
+---
+# Result: navigation completed or failed
+bool success
+string message
+
+---
+# Feedback: current state during navigation
+geometry_msgs/PoseStamped current_pose
+float32 distance_remaining
+nav_msgs/Path remaining_path

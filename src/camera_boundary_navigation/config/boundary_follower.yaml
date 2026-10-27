@@ -1,0 +1,179 @@
+camera_boundary_navigation_node:
+  ros__parameters:
+    # ==================== 输入话题 ====================
+    # camera_costmap_cloud_node输出的已过滤和平滑的左右边界约束。
+    # intensity约定：1=左边界，2=右边界，3=最前方边界。
+    boundary_topic: "/traversability/costmap/boundary_constraints"
+    # 已相对地面过滤、去噪和降采样的障碍，用于急停和路径碰撞检查。
+    obstacle_topic: "/traversability/costmap/depth_obstacles"
+    # 可通行栅格点云；其中intensity=1的栅格被视为Ground。
+    grid_topic: "/traversability/grid"
+    # 收到true后允许输出非零速度，false立即停车。
+    enable_topic: "/camera_navigation/enable"
+    # 收到true后暂停导航，false解除暂停；解除后仍需通过恢复帧检查。
+    pause_topic: "/pause"
+
+    # ==================== 输出话题与坐标系 ====================
+    # 默认与底盘隔离；真车测试确认安全后再显式改为或重映射到/cmd_vel。
+    cmd_vel_topic: "/camera_navigation/cmd_vel"
+    # 完整局部参考路径，主要用于RViz观察和调试。
+    reference_path_topic: "/camera_navigation/reference_path"
+    # Pure Pursuit当前使用的前视目标点。
+    target_topic: "/camera_navigation/target_point"
+    # 导航状态和拟合质量诊断信息。
+    status_topic: "/camera_navigation/status"
+    # 所有路径点所在的车辆局部重力对齐坐标系：x向前、y向左。
+    output_frame: "gravity_aligned_base"
+
+    # ==================== 跟随边界选择 ====================
+    # left：使用intensity=1的左边界；right：使用intensity=2的右边界。
+    # 参数只在节点启动时加载，修改后需要重新构建安装空间并重启节点。
+    reference_side: "right"
+    # 边界不足时以前方为目标，仍由Ground/障碍/VFH验证路径；关闭可恢复边界不足停车。
+    boundaryless:
+      enabled: true
+
+    # ==================== 边界拟合与偏移 ====================
+    boundary:
+      # 参与拟合的最近/最远纵向距离，单位m；过近点容易受车体和深度噪声影响。
+      fit_x_min: 0.6
+      fit_x_max: 2.0
+      # RANSAC内点至少达到该数量，边界曲线才可能有效。
+      minimum_points: 8
+      # 有效边界点在x方向的最小跨度，单位m；防止用很短的一段边界外推。
+      minimum_x_span: 1.0
+      # 拟合内点的最大均方根残差，单位m；越小越严格，但更容易判定拟合无效。
+      maximum_fit_residual: 0.12
+      # RANSAC/迭代拟合的离群点距离阈值，单位m；残差超过该值的点被剔除。
+      outlier_threshold: 0.18
+      # RANSAC初始模型之后的内点重拟合次数。
+      robust_iterations: 3
+      # 边界曲线时间滤波系数，范围[0,1]；越小越平稳，越大响应越快。
+      filter_alpha: 0.30
+      # 从所跟随道路边界向道路内部偏移的距离，单位m。
+      # 至少应大于车辆半宽+边界安全余量；过大可能使路径靠近道路另一侧。
+      offset: 0.65
+
+    # ==================== 路径采样与运动控制 ====================
+    control:
+      # 控制循环频率，单位Hz。
+      frequency: 20.0
+      # 沿拟合边界生成参考路径点的x方向采样间隔，单位m。
+      # 越小显示越平滑，但会增加路径安全检查计算量。
+      path_sample_step: 0.10
+      # 三次Bé塞尔过渡曲线的控制柄长度系数，范围(0,1]。
+      # 控制柄基础长度=车辆原点到偏移边界起点距离×该系数；越大过渡越舒缓，
+      # 但过大可能在近距离大横向偏差时产生过宽的转向，代码还会按前向距离限幅。
+      bezier_handle_ratio: 0.35
+      # Pure Pursuit前视距离，单位m；越大转向更平稳，越小跟弯更灵敏。
+      lookahead_distance: 1.50
+      # 低曲率路段期望线速度，单位m/s。
+      nominal_linear_velocity: 0.25
+      # 因曲率减速后的线速度下限，单位m/s。
+      minimum_linear_velocity: 0.10
+      # 最终允许的线速度上限，单位m/s。
+      maximum_linear_velocity: 0.5
+      # 角速度绝对值上限，单位rad/s。
+      maximum_angular_velocity: 0.5
+      # 相邻控制周期角速度最大变化率，单位rad/s^2，用于限制转向突变。
+      maximum_angular_acceleration: 0.50
+      # 允许的路径曲率绝对值上限，单位1/m；超过时认为控制目标不可信并停车。
+      maximum_abs_curvature: 1.50
+      # 曲率减速增益；越大，弯道速度下降越明显。
+      curvature_slowdown_gain: 1.50
+      # 速度指令低通滤波系数，范围[0,1]；越小越平滑，越大响应越快。
+      command_filter_alpha: 0.50
+
+    # ==================== 稳定局部规划 ====================
+    stability:
+      # true：启用直行优先策略；false：退回原来的边界平移参考路径。
+      enabled: true
+      # 每帧直线或定曲率候选路径的规划弧长上限，单位m；还会受边界可见范围限制。
+      path_horizon: 2.50
+      # 在该前向位置评估车辆与所跟随边界的横向距离，单位m。
+      boundary_evaluation_x: 0.80
+      # 允许边界距离相对boundary.offset变化的死区半宽，单位m。
+      # 例如offset=0.65、deadband=0.20时，0.45～0.85m内强制优先直行。
+      boundary_distance_deadband: 0.20
+      # 同一转弯方向必须连续出现的相机帧数，达到后才由直行切换为转弯。
+      turn_confirmation_frames: 5
+      # 重新满足直行条件后必须连续保持的帧数，达到后才退出转弯。
+      straight_confirmation_frames: 8
+      # 转弯状态下允许的最小曲率绝对值，单位1/m。
+      minimum_turn_curvature: 0.05
+      # 对边界路径目标曲率的跟踪权重；增大后转弯响应更积极。
+      curvature_tracking_weight: 4.0
+      # 对相邻帧曲率变化的惩罚权重；增大后路径更稳定，但入弯响应更慢。
+      curvature_change_weight: 12.0
+      # 每个新相机帧允许的最大曲率变化，单位1/m；作为权重惩罚之外的硬限制。
+      maximum_curvature_change_per_frame: 0.05
+
+    # ==================== 相机局部避障 ====================
+    avoidance:
+      # 无障碍保留稳定跟随；受阻时搜索VFH引导的前进圆弧。false退回原来的遇障停车。
+      enabled: true
+      # 角度采样数，以及目标方向允许的半视角(rad)；实际可行区域仍由Ground约束。
+      angular_bins: 61
+      half_fov: 0.75
+      # 最大规划弧长与最小可行长度(m)，还受边界可见范围限制。
+      horizon: 2.0
+      minimum_path_length: 1.0
+      # 地面覆盖检查的圆形机体半径(m)。需按车辆尺寸设置；不得大于path_clearance。
+      ground_half_width: 0.30
+      target_weight: 4.0
+      smooth_weight: 1.0
+      obstacle_weight: 0.8
+      reference_weight: 1.0
+      side_switch_penalty: 2.0
+      # 正常路径连续安全后开始回归；回归目标曲率每帧的变化步长(1/m)。
+      return_confirmation_frames: 8
+      return_curvature_step: 0.05
+      # 停车距离模型 v*reaction_time + v²/(2*braking_deceleration) + stop_margin。
+      # 减速度须使用底盘实测保守值；反应时间至少覆盖input_timeout+一个控制周期。
+      braking_deceleration: 0.50
+      reaction_time: 0.35
+      stop_margin: 0.25
+      # 扫掠路径与膨胀障碍净距低于该值(m)时降速，允许低于minimum_linear_velocity。
+      slowdown_clearance: 0.50
+      # 膨胀障碍之外的舒适净距；不足时主动搜索，不再因几何安全保持直行。
+      preferred_clearance: 0.20
+      clearance_weight: 12.0
+      corridor_weight: 4.0
+
+    # ==================== 安全门 ====================
+    safety:
+      # 边界、地面栅格或障碍点云的最大允许断流时间，单位s；超时立即停车。
+      input_timeout: 0.25
+      # 允许源时间戳略超前于当前ROS时钟的容差，单位s。实机默认不允许未来消息；
+      # Gazebo等低频发布/clock而传感器频率更高的环境应在专用配置中单独覆盖。
+      future_tolerance: 0.0
+      # 从任何停车/无效状态恢复后，必须连续通过检查的相机帧数。
+      recovery_valid_frames: 5
+      # 安全检查内部使用的二维栅格分辨率，单位m；应与感知栅格分辨率一致。
+      grid_resolution: 0.15
+      # Ground覆盖检查的最小前向距离，单位m；更近区域属于深度相机地面盲区。
+      # 该参数只跳过近场Ground缺失，障碍物急停检查仍覆盖车辆前方近场。
+      minimum_ground_check_x: 0.60
+      # 最小安全前向范围(m)。避障启用时检查所选轨迹可行弧长，否则检查全局前边界。
+      minimum_front_range: 1.00
+      # 车辆正前方近场障碍急停距离，单位m。
+      obstacle_stop_distance: 0.70
+      # 近场急停区域相对车辆中心线的横向半宽，单位m。
+      obstacle_half_width: 0.40
+      # 抑制单个深度噪点：同一安全栅格达到该点数后才作为有效障碍。
+      # 增大可降低孤立噪点误停，但过大可能漏检稀疏小障碍物。
+      minimum_obstacle_points_per_cell: 1
+      # 参考路径中心至障碍物的最小距离，应覆盖车辆半宽和安全余量。
+      # 单位m；减小可能降低误停，但也会降低碰撞安全余量。
+      path_clearance: 0.40
+      # true：要求路径落在Ground内；避障启用时同时检查圆形机体覆盖，禁止关闭。
+      require_ground_grid: true
+      # true：要求障碍物点云输入有效，并执行路径碰撞检查。
+      require_obstacle_cloud: true
+
+    # ==================== 运动使能 ====================
+    motion:
+      # 安全默认：启动后仅发布零速，必须通过enable话题显式使能。
+      enabled_on_startup: false
+      # true：处于禁用、暂停、超时或障碍状态时持续发布零速度。
+      publish_zero_when_stopped: true

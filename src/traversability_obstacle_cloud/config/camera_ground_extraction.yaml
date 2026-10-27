@@ -1,0 +1,301 @@
+depth_cloud_projector_node:
+  ros__parameters:
+    # raw: 在线相机原始深度图，订阅input_depth_topic；compressed_depth: rosbag compressedDepth，订阅input_compressed_depth_topic。
+    input_mode: "compressed_depth"
+    input_depth_topic: "/camera/depth/image_raw"
+    input_compressed_depth_topic: "/camera/depth/image_raw/compressedDepth"
+    output_cloud_topic: "/depth/points"
+    output_frame: "camera_depth_optical_frame"
+    process_once: false
+    camera:
+      width: 848
+      height: 480
+      fx: 412.5237731933594
+      fy: 412.5237731933594
+      cx: 421.3500061035156
+      cy: 241.98751831054688
+      depth_scale: 0.001
+    filter:
+      min_depth: 0.2
+      max_depth: 12.0
+      pixel_step: 1
+
+rgb_image_decoder_node:
+  ros__parameters:
+    input_rgb_topic: "/camera/color/image_raw/compressed"
+    output_rgb_topic: "/camera/color/image_raw"
+    # 留空时保留压缩图像中的camera_color_optical_frame。
+    output_frame: ""
+
+traversability_obstacle_cloud_node:
+  ros__parameters:
+    input_cloud_topic: "/depth/points"
+    # 单个Imu消息同时包含linear_acceleration和angular_velocity。
+    imu_topic: "/camera/gyro_accel/sample"
+    ground_topic: "/ground_points"
+    # 由绿色Ground栅格中心生成的规则连续地面点云，包含短距离桥接单元。
+    ground_grid_topic: "/traversability/ground_grid_points"
+    # U形边界点云：intensity 1=左边界，2=右边界，3=最前方边界；不生成近相机后边界。
+    boundary_topic: "/traversability/ground_boundary_points"
+    obstacle_topic: "/obstacle_points"
+    unknown_topic: "/unknown_points"
+    grid_topic: "/traversability/grid"
+    rgb_topic: "/camera/color/image_raw"
+    overlay_topic: "/traversability/rgb_overlay"
+    output_frame: "gravity_aligned_base"
+
+    # 按需关闭输出。关闭后会跳过对应点云构造/序列化；关闭rgb_overlay还会停止订阅RGB。
+    # /ground_points是核心输出，始终发布。
+    publish:
+      ground_grid: true
+      boundary: true
+      obstacle: true
+      unknown: true
+      grid: true
+      rgb_overlay: true
+
+    # RKNN二维检测框只作为语义先验；只有框内同时存在相对周围地面的负高度差，
+    # 才会发布凹坑边界。检测消息使用原始RGB时间戳匹配缓存的深度栅格。
+    pothole:
+      enabled: true
+      detection_topic: "/traversability/pothole_detections"
+      boundary_topic: "/traversability/pothole_boundary_points"
+      class_id: 0
+      min_confidence: 0.60
+      max_time_difference: 0.05
+      frame_cache_size: 12
+      min_drop: 0.05
+      ground_search_radius: 0.60
+      min_ground_neighbors: 3
+      min_component_cells: 3
+
+    # 输入点云和当前数据集的IMU均采用ROS光学轴：X右、Y下、Z前。
+    # 节点内部首先转换为X前、Y左、Z上。
+    cloud_is_optical: true
+    imu_is_optical: true
+    specific_force_is_up: true
+    require_imu: true
+
+    imu:
+      require_gyro: true
+      gravity_alpha: 0.02
+      min_accel_norm: 7.0
+      max_accel_norm: 12.5
+      max_gyro_norm: 1.0
+
+    # 点云坐标轴转换后、重力对齐前的相机到车辆参考点外参。
+    cloud_extrinsic:
+      x: 0.16
+      y: 0.0
+      z: 0.65
+      roll_deg: 0.0
+      pitch_deg: 0.0
+      yaw_deg: 0.0
+
+    # IMU光学轴转换后到车辆坐标的剩余安装误差。
+    imu_extrinsic:
+      roll_deg: 0.0
+      pitch_deg: 0.0
+      yaw_deg: 0.0
+
+    # 来自rosbag_caminfo的彩色相机内参。
+    color_camera:
+      fx: 610.066650390625
+      fy: 610.0393676757812
+      cx: 639.6405639648438
+      cy: 365.00836181640625
+      overlay_radius: 3
+      # 0表示在线运行时始终使用最近彩色帧，避免RGB/深度帧率不同导致停止发布叠加图。
+      max_time_difference: 0.0
+      # RGB叠加图当前只展示绿色地面区域。
+      show_ground: true
+      show_obstacle: false
+      show_unknown: false
+      # 左上角实时显示相机相对水平坐标系的Roll/Pitch。
+      show_attitude: true
+      font_scale: 0.7
+
+    # 当前bag未包含depth->color精确外参，暂以光轴重合作为初值。
+    # 获取Orbbec标定外参后在这里替换。
+    color_extrinsic:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+      roll_deg: 0.0
+      pitch_deg: 0.0
+      yaw_deg: 0.0
+
+    roi:
+      x_min: 0.2
+      x_max: 6.0
+      y_min: -7.0
+      y_max: 7.0
+      z_min: -1.5
+      z_max: 1.5
+      max_range: 6.0
+
+    # 1为不降采样；2表示每隔一个输入点处理一次。
+    point_stride: 1
+
+    grid:
+      # 栅格分辨率
+      resolution: 0.15
+      # 一个栅格至少需要多少个点才进行可靠分类
+      min_points: 2
+      # 同一栅格内的方差，0.0025对应约5cm
+      max_variance: 0.0025
+      # 同一栅格中最大和最小高度相差距离，在该距离范围内仍然判定为候选地面
+      max_roughness: 0.05
+      # 限制相邻栅格间的坡度
+      max_slope_deg: 18.0
+      # 限制相邻栅格最低地面高度的最大跳变
+      max_step: 0.05
+      # 点云高度可以高于估计地面的最大值，即允许高出地面多少米
+      ground_point_tolerance: 0.05
+
+    # 种子位于车辆前方中央区域
+    # 该区域的候选格直接作为地面扩展种子
+    seed:
+      x_min: 0.5
+      x_max: 1.5
+      half_width: 0.5
+
+    # 允许跨过的最大无法观察栅格以连接地面，用于处理点云稀疏导致的地面区域过少的问题
+    max_unknown_gap_cells: 2
+
+    boundary:
+      # 忽略横向Ground单元过少的孤立远端列，避免单个噪声格拉长前边界。
+      min_column_cells: 2
+      fov_filter:
+        enabled: true
+        horizontal_margin_px: 20.0
+        # 与depth_cloud_projector_node.camera的深度内参保持一致。
+        width: 848
+        fx: 412.5237731933594
+        cx: 421.3500061035156
+
+# 该信息输入到导航costmap中
+camera_costmap_cloud_node:
+  ros__parameters:
+    # 适配节点只消费分类节点的既有输出，不改变原始地面/障碍/边界话题。
+    input:
+      obstacle_topic: "/obstacle_points"
+      ground_grid_topic: "/traversability/ground_grid_points"
+      boundary_topic: "/traversability/classified_boundary_points"
+      pothole_boundary_topic: "/traversability/pothole_boundary_points"
+    # 该输出用于navigation2的costmap
+    output:
+      depth_topic: "/traversability/costmap/depth_obstacles"
+      boundary_topic: "/traversability/costmap/boundary_constraints"
+      pothole_boundary_topic: "/traversability/costmap/pothole_constraints"
+
+    # 分类节点已将点转换到重力对齐的车体坐标。当前Nav2使用二维base_link，
+    # 因此适配输出直接采用base_link语义；这里不执行通用TF变换。
+    expected_input_frame: "gravity_aligned_base"
+    output_frame: "base_link"
+
+    depth:
+      x_min: 0.30
+      x_max: 4.0
+      abs_y_max: 3.0
+      min_height: 0.10
+      max_height: 1.20
+      max_range: 4.0
+      voxel_size: 0.05
+      # 以附近可通行地面拟合局部平面，按点高出局部地面的高度判定障碍。
+      # 找不到可靠局部地面时默认保留原障碍点，避免因参考面缺失而漏障。
+      relative_ground:
+        enabled: true
+        min_height: 0.10
+        search_radius: 0.45
+        min_neighbors: 4
+        max_plane_rmse: 0.08
+        max_slope_deg: 25.0
+        max_age: 0.15
+        keep_without_ground: true
+        # 被局部地面过滤的点仅用于RViz调试，不会进入Nav2。
+        publish_rejected_points: true
+        rejected_topic: "/traversability/costmap/depth_ground_rejected"
+      # 体素降采样后执行单帧半径离群点过滤；邻居数不包含点自身。
+      denoise:
+        enabled: true
+        search_radius: 0.12
+        min_neighbors: 3
+        # 被剔除的点用于RViz调参，不会进入Nav2。
+        publish_rejected_points: true
+        rejected_topic: "/traversability/costmap/depth_noise"
+
+    boundary:
+      include_left: true
+      # 与分类节点grid.resolution保持一致，用于禁止视场区段补点与历史保持。
+      fov_cell_size: 0.15
+      include_right: true
+      # 前边界常由深度视野末端形成，并不一定是真实障碍，默认不注入costmap。
+      include_front: false
+      # 只输出x_min <= x <= x_max范围内的边界，在base_link坐标系下。
+      x_min: 1.2
+      x_max: 5.0
+      abs_y_max: 3.0
+      # 原边界位于地面高度；抬高到Nav2障碍高度窗口内作为虚拟墙。
+      marking_height: 0.30
+      # 与当前local costmap的0.05m分辨率一致。
+      point_spacing: 0.05
+      # 感知边界出现大缺口时不虚构跨越缺口的墙。
+      max_segment_length: 0.45
+      smoothing:
+        enabled: true
+        # 每侧边界至少需要的候选点，以及沿前向列使用的奇数中值窗口。
+        min_valid_points: 4
+        median_window: 5
+        # 候选点偏离邻域中值超过该距离时视为横向跳点。
+        max_lateral_jump: 0.30
+        # 迭代抑制曲线二阶差分；0不平滑，1完全采用邻点线性预测。
+        spatial_smoothing: 0.35
+        spatial_iterations: 3
+        # 固定X位置重采样，与local costmap分辨率一致。
+        resample_spacing: 0.05
+        # 小变化强平滑；变化增大时alpha自适应升高，降低真实转弯的滞后。
+        temporal_alpha: 0.20
+        adaptive_alpha_max: 0.45
+        max_temporal_jump: 0.40
+        # 短时缺测保留，长时间中断或时间戳回退时清空历史状态。
+        max_hold_frames: 3
+        reset_timeout: 0.50
+        # 同一X处左右边界小于该宽度时不向Nav2发布该对约束。
+        min_corridor_width: 0.70
+
+    # 凹坑轮廓单独输出，Nav2把它作为只标记、不清障的闭合虚拟墙。
+    pothole:
+      enabled: true
+      x_min: 0.30
+      x_max: 4.0
+      abs_y_max: 3.0
+      marking_height: 0.30
+      point_spacing: 0.05
+      max_segment_length: 0.35
+      # 检测节点异常退出时主动发布空点云，避免Nav2永久保留最后一帧凹坑。
+      stale_timeout: 0.50
+      save:
+        # 仅保存最终非空的costmap凹坑约束点云，独立于图片保存开关。
+        enabled: true
+        directory: "/home/cat/nanhu-research-navigation/pics"
+
+pothole_detector_node:
+  ros__parameters:
+    model_path: "models/sbp-yolo-rkopt-fp16.rknn"
+    image_topic: "/camera/color/image_raw"
+    detection_topic: "/traversability/pothole_detections"
+    qos_reliability: "best_effort"
+    qos_depth: 2
+    process_every_n: 1
+    confidence_threshold: 0.50
+    nms_threshold: 0.45
+    log_every_n: 10
+    npu_core_mask: "core0_1_2"
+    # 保持模型原始类别顺序；节点在发布和保存前仅保留class 0（Pothole）。
+    class_names: ["Pothole", "SpeedBump"]
+    save:
+      # true时，仅在模型至少检测到一个Pothole时保存；每帧生成带框JPG和同名TXT。
+      enabled: true
+      directory: "/home/cat/nanhu-research-navigation/pics"
+      write_metadata: true

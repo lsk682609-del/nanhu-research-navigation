@@ -1,0 +1,11 @@
+depth_cloud_projector_node:
+  ros__parameters:
+    # 来自 rosbag_caminfo 中 /camera/depth/camera_info 的静态标定。
+    camera:
+      width: 848
+      height: 480
+      fx: 412.5237731933594
+      fy: 412.5237731933594
+      cx: 421.3500061035156
+      cy: 241.98751831054688
+      depth_scale: 0.001

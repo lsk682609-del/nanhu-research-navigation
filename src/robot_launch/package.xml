@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>robot_launch</name>
+  <version>0.1.0</version>
+  <description>Launch files and Nav2 parameters for simulation / outdoor bringup.</description>
+  <maintainer email="todo@example.com">todo</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
+  <exec_depend>nav2_map_server</exec_depend>
+  <exec_depend>nav2_controller</exec_depend>
+  <exec_depend>nav2_straight_planner</exec_depend>
+  <exec_depend>nav2_net_planner</exec_depend>
+  <exec_depend>nav2_net_system</exec_depend>
+  <exec_depend>nav2_input_bridge</exec_depend>
+  <exec_depend>nav2_log_record</exec_depend>
+  <exec_depend>nav2_a_star_rpp</exec_depend>
+  <exec_depend>nav2_costmap_2d</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

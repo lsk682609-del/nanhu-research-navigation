@@ -1,0 +1,291 @@
+
+base_to_livox_tf:
+  ros__parameters:
+    use_sim_time: false
+
+base_to_odom_tf:
+  ros__parameters:
+    use_sim_time: false
+    
+/**/nav2_log_record:
+  ros__parameters:
+    log_output: both
+    log_level: info
+    log_event_topic: "log/event"
+    log_record_topic: "log/record"
+    
+/**/controller_server:
+  ros__parameters:
+    use_sim_time: false
+    odom_topic: odom_local
+    cmd_vel_pause_topic: "pause"
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.02
+    min_y_velocity_threshold: 0.02
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 5.0
+    progress_checker_plugin: "progress_checker"
+    current_goal_checker: "general_goal_checker"
+    goal_checker_plugins: ["general_goal_checker"]
+    controller_plugins: ["FollowPath"]
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.1
+      movement_time_allowance: 10.0
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.2
+      yaw_goal_tolerance: 3.15
+    FollowPath:
+      plugin: "nav2_a_star_rpp::RegulatedPurePursuitController"
+
+      # —— 预瞄点 ——
+      lookahead_dist: 1.3                  # 预瞄距离
+      use_interpolation: true              # 预瞄点插值
+
+      # —— 速度指令 ——
+      desired_linear_vel: 1.0              # 期望线速度
+      max_linear_accel: 0.30                # 正常跟踪指令最大线加速度（m/s²），基于上一条输出指令累积升速
+      max_linear_decel: 0.60                # 正常跟踪最大线减速度（m/s²），安全急停不受此参数限制
+
+      # —— 弯道减速 ——
+      use_regulated_linear_velocity_scaling: true        # 弯道曲率减速开关
+      regulated_linear_scaling_min_radius: 3.0           # 触发减速的转弯半径阈值
+      regulated_linear_scaling_min_speed: 0.25           # 弯道减速后的最低线速
+
+      # —— 障碍物降速 ——
+      use_cost_regulated_linear_velocity_scaling: false   # 障碍物距离降速开关
+      cost_scaling_dist: 0.6                # 触发降速的障碍物距离
+      cost_scaling_gain: 1.0                # 降速比例（≤1.0，值越小降得越狠）
+      inflation_cost_scaling_factor: 3.0    # 膨胀层代价值系数
+      lethal_cost: 200                     # Theta* 绕障代价阈值，越小越保守
+      traversal_cost_weight: 3.0            # 障碍物代价权重，越大路径越远离障碍
+
+      # —— Theta* 路径平滑 ——
+      path_smoothing_enabled: true          # 是否对 Theta* 输出执行迭代平滑
+      smoothing_max_iterations: 100         # 最大迭代次数
+      smoothing_tolerance: 0.0001           # 单轮路径点累计变化量小于该值时停止迭代
+      smoothing_data_weight: 0.20           # 原路径保持权重，越大越贴近 Theta* 折线
+      smoothing_smooth_weight: 0.30         # 相邻点平滑权重，越大拐角越圆滑，范围 (0, 0.5]
+      smoothing_max_deviation: 0.50         # 相对 Theta* 原路径的最大横向偏移（m）
+      smoothing_collision_step: 0.025       # 整车轮廓连续碰撞复检的采样间距（m）
+      smoothing_backtracking_steps: 6       # 平滑结果碰撞时逐步退回原折线的次数
+
+      # —— 靠近终点减速 ——
+      min_approach_linear_velocity: 0.05    # 靠近终点时的最低线速
+      approach_velocity_scaling_dist: 1.0   # 靠近终点减速起始距离
+
+      # —— 碰撞检测 ——
+      use_collision_detection: true         # 碰撞检测开关
+      max_allowed_time_to_collision_up_to_carrot: 1.0  # 碰撞投影时间上限
+
+      # —— 原地转向 ——
+      use_rotate_to_heading: true           # 原地对准路径/目标朝向
+      rotate_to_heading_angular_vel: 0.5     # 转向角速度 (30°/s)
+      rotate_to_heading_min_angle: 0.5      # 触发转向的最小角度差 (10度)
+      max_angular_accel: 1.57                # 最大角加速度
+
+      # —— 其他 ——
+      allow_reversing: false                # 是否允许倒车
+      transform_tolerance: 0.5              # TF变换容忍时间
+      max_robot_pose_search_dist: 10.0      # 搜索最近路径点的最大距离
+
+      # —— polyline / freeze ——
+      prefer_planner_polyline_when_clear: true
+      polyline_collision_check_resolution: 0.05
+      polyline_track_max_length: 15.0
+      publish_global_path_slice_freeze: true
+      publish_merge_connection_point: true
+
+/**/controller_server_rclcpp_node:
+  ros__parameters:
+    use_sim_time: false
+
+/**/net_planner_action_server:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    max_snap_distance: 15.0
+    edge_snap_enabled: false   # false=只吸附节点, true=可在边上投影虚拟节点
+    transform_tolerance: 0.5
+    dense_path_step: 0.1
+    max_dense_path_length: 0.0
+    publish_planner_path: true
+    planner_path_topic: topology_plan
+
+/**/net_navigator:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    goal_match_tolerance: 0.05
+    controller_id: FollowPath
+    goal_checker_id: general_goal_checker
+    follow_path_action: follow_path
+    compute_path_action: compute_path_to_pose
+    follow_slice_horizon_m: 30.0
+    path_progress_min_translation_m: 0.05
+    path_progress_max_projection_distance_m: 1.0
+    path_progress_passed_point_margin_m: 0.10
+    enable_controller_slice_freeze: true
+    freeze_slice_topic: /controller_server/global_path_slice_freeze
+    executing_freq_hz: 1.0
+
+/**/local_costmap:
+  local_costmap:
+    ros__parameters:
+      update_frequency: 20.0
+      publish_frequency: 10.0
+      global_frame: map
+      robot_base_frame: base_link
+      use_sim_time: false
+      rolling_window: true
+      width: 10
+      height: 10
+      resolution: 0.05
+      footprint: "[ [0.3, 0.25], [0.3, -0.25], [-0.3, -0.25], [-0.3, 0.25] ]"
+      # footprint: "[ [0.35, 0.3], [0.35, -0.3], [-0.35, -0.3], [-0.35, 0.3] ]"
+      # footprint: "[ [0.1, 0.1], [0.1, -0.1], [-0.1, -0.1], [-0.1, 0.1] ]"
+      # 插件顺序用于隔离膨胀：普通障碍先膨胀，边界随后标记并使用较小膨胀。
+      plugins: ["obstacle_layer", "slope_traversability_layer", "inflation_layer", "camera_boundary_obstacle_layer", "camera_boundary_inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        clear_before_update: true
+        observation_sources: camera_depth
+        min_obstacle_height: -100.0
+        max_obstacle_height: 100.0
+        # 相机真实深度障碍：允许射线清除旧障碍。
+        camera_depth:
+          topic: /traversability/costmap/depth_obstacles
+          sensor_frame: base_link
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.30
+          raytrace_max_range: 4.5
+          raytrace_min_range: 0.30
+          min_obstacle_height: 0.05
+          max_obstacle_height: 1.50
+          clearing: true
+          marking: true
+          inf_is_valid: false
+          data_type: "PointCloud2"
+          observation_persistence: 0.0
+      slope_traversability_layer:
+        plugin: "nav2_costmap_2d::SlopeTraversabilityLayer"
+        enabled: true
+        pointcloud_topic: cur_lid
+        max_slope_deg: 15.0
+        max_step_height: 0.10
+        max_ground_residual: 0.06
+        obstacle_height: 0.12
+        max_range: 3.0
+        neighborhood_radius: 0.45
+        cloud_timeout: 0.5
+        min_neighbors: 4
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+        cost_scaling_factor: 5.0
+        inflation_radius: 1.0
+      # 左右道路边界使用独立ObstacleLayer，避免经过上面的普通1.0m膨胀层。
+      camera_boundary_obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        clear_before_update: true
+        observation_sources: camera_boundary pothole_boundary
+        min_obstacle_height: -100.0
+        max_obstacle_height: 100.0
+        camera_boundary:
+          topic: /traversability/costmap/boundary_constraints
+          sensor_frame: base_link
+          obstacle_max_range: 5.0
+          obstacle_min_range: 0.30
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.30
+          min_obstacle_height: 0.05
+          max_obstacle_height: 1.50
+          # 虚拟边界只标记，不参与射线清障。
+          clearing: false
+          marking: true
+          inf_is_valid: false
+          data_type: "PointCloud2"
+          observation_persistence: 0.0
+        pothole_boundary:
+          topic: /traversability/costmap/pothole_constraints
+          sensor_frame: base_link
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.30
+          raytrace_max_range: 4.0
+          raytrace_min_range: 0.30
+          min_obstacle_height: 0.05
+          max_obstacle_height: 1.50
+          clearing: false
+          marking: true
+          inf_is_valid: false
+          data_type: "PointCloud2"
+          observation_persistence: 0.0
+      camera_boundary_inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+        # 小于普通障碍的1.0m膨胀，且更快衰减。
+        # 需不小于当前footprint计算出的约0.405m包络半径。
+        inflation_radius: 0.45
+        cost_scaling_factor: 8.0
+        inflate_unknown: false
+        inflate_around_unknown: false
+      always_send_full_costmap: true
+  local_costmap_client:
+    ros__parameters:
+      use_sim_time: false
+  local_costmap_rclcpp_node:
+    ros__parameters:
+      use_sim_time: false
+
+/**/lifecycle_manager_navigation:
+  ros__parameters:
+    use_sim_time: false
+    autostart: true
+    bond_timeout: 10.0
+    node_names: [ 'nav2_log_record', 'nav2_input_bridge', 'net_planner_action_server', 'net_navigator', 'controller_server']
+
+/**/nav2_input_bridge:
+  ros__parameters:
+    use_sim_time: false
+    lidar_pcl_topic: "rslidar_points"
+    local_odom_topic: "odom"
+    odom_output_topic: "odom_local"
+    lidar_output_topic: "cur_lid"
+    global_frame: "map"
+    robot_base_frame: "base_link"
+    lidar_frame: "lidar"
+    # IMU/LiDAR → robot center (body frame: x-forward, y-left, z-up)
+    #body_offset_x: 0.0
+    #body_offset_y: 0.0
+    # body_offset_z: 0.0
+    body_offset_x: -0.40
+    body_offset_y: 0.0
+    body_offset_z: 0.50
+    reference_latitude: 30.8135718
+    reference_longitude: 120.8338169
+    reference_altitude: 12.318126322268082
+    #reference_latitude: 30.7939518
+    #reference_longitude: 120.8104288
+    #reference_altitude: 12.07629405266946
+    goal_input_topic: "gp_goal"
+    uav_goal_input_topic: "uav/target_gps"
+    target_detected_topic: "target_detected"
+    goal_output_topic: "goal_pose"
+    goal_output_frame: "map"
+    require_nav_sat_fix: true
+    crop_enabled: false
+    crop_x_min: -1.0
+    crop_x_max: 0.05
+    crop_y_min: -0.3
+    crop_y_max: 0.3
+    crop_z_min: -0.1
+    crop_z_max: 1.0
+    goal_yaw_from_bearing: false
+
+# ros2can (car_driver) has no ROS parameters; subscribes /cmd_vel directly

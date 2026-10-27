@@ -1,0 +1,9 @@
+# 纯视觉局部导航的适配器覆盖；不改变Nav2感知启动的base_link默认值。
+camera_costmap_cloud_node:
+  ros__parameters:
+    output_frame: "gravity_aligned_base"
+    # 保留近场区域供急停检查；仍应用相对地面、体素和离群点过滤。
+    depth:
+      x_min: 0.0
+    boundary:
+      x_min: 0.6

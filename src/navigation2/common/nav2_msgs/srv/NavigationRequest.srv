@@ -1,0 +1,9 @@
+string command_id   # 指令id，便于调试，可为空
+string cmd    #命令：New-开始导航，下发目标点，Cancel-取消导航
+geometry_msgs/PoseStamped target_pose    #目标位置
+
+---
+
+string command_id   # 指令id，与请求保持一致
+bool success   # true: 执行成功；false： 执行失败
+string message  # 失败时显示原因

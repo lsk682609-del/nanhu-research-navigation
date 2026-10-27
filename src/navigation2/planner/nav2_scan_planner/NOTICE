@@ -1,0 +1,9 @@
+Core files under src/core and include/nav2_scan_planner/vendor are derived from
+SCAN-Planner, https://github.com/wuyi2121/SCAN-Planner, Apache License 2.0.
+Source used: /home/cat/scan_planner/src/SCAN-Planner (local checkout).
+Original contributors: Han Zheng, Zhe Chen, Yiwen Fu, Ming Yang, Tong Qin,
+and authors credited in individual source files (including EGO-Planner/L-BFGS).
+Modifications: native ROS2 parameter/logging APIs; isolated namespace; LiDAR/TF
+input adapter; planning deadline checks; A* allocation cleanup; RPP Path output.
+The native occupancy fusion, ray casting, sliding grid, inflation, rebound
+optimization and B-spline algorithms are retained. No ROS1 compatibility layer.

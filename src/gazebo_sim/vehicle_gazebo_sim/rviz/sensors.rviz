@@ -1,0 +1,26 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Topic:
+        Value: /robot_description
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Livox PointCloud
+      Enabled: true
+      Topic:
+        Value: /livox/lidar/pointcloud
+      Size (Pixels): 2
+      Style: Points
+  Enabled: true
+  Global Options:
+    Fixed Frame: base_footprint
+    Frame Rate: 30
+  Name: root

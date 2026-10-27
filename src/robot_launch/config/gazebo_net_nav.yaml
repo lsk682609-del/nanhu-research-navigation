@@ -1,0 +1,228 @@
+# Standalone simulation configuration; no camera observations or hardware drivers.
+/**:
+  ros__parameters:
+    use_sim_time: true
+
+/**/nav2_input_bridge:
+  ros__parameters:
+    local_odom_topic: /odom
+    odom_output_topic: odom_local
+    body_offset_x: 0.0
+    body_offset_y: 0.0
+    body_offset_z: 0.0
+    global_frame: map
+    robot_base_frame: base_link
+    lidar_pcl_topic: /livox/lidar/pointcloud
+    lidar_output_topic: cur_lid
+    lidar_frame: livox_frame
+    crop_enabled: false
+    reference_latitude: 30.8277361671667
+    reference_longitude: 120.847804830667
+    reference_altitude: 3.2133
+    goal_input_topic: unused_gps/gp_goal
+    uav_goal_input_topic: unused_gps/uav_goal
+    goal_output_topic: unused_gps/goal_pose
+    gp_path_input_topic: unused_gps/gp_path
+    gp_path_output_topic: unused_gps/path
+    log_event_topic: log/event
+    log_record_topic: log/record
+
+/**/net_planner_action_server:
+  ros__parameters:
+    global_frame: map
+    robot_base_frame: base_link
+    # Match the real-vehicle node-snap mode. Current SNN does not include
+    # temporary edge-snap nodes in its topology snapshot.
+    # Longest map edge is 6.40 m; 4 m permits restarting near its midpoint.
+    max_snap_distance: 4.0
+    edge_snap_enabled: false
+    transform_tolerance: 0.5
+    dense_path_step: 0.1
+    max_dense_path_length: 0.0
+    publish_planner_path: true
+    planner_path_topic: topology_plan
+
+/**/net_navigator:
+  ros__parameters:
+    global_frame: map
+    robot_base_frame: base_link
+    goal_match_tolerance: 0.05
+    controller_id: FollowPath
+    goal_checker_id: general_goal_checker
+    follow_path_action: follow_path
+    compute_path_action: compute_path_to_pose
+    follow_slice_horizon_m: 30.0
+    path_progress_min_translation_m: 0.05
+    path_progress_max_projection_distance_m: 1.0
+    path_progress_passed_point_margin_m: 0.10
+    executing_freq_hz: 1.0
+    recovery_max_attempts: 2
+
+/**/controller_server:
+  ros__parameters:
+    # Preserve the simulator's body-frame twist; bridge differences are world-frame.
+    odom_topic: /odom
+    cmd_vel_pause_topic: pause
+    controller_frequency: 10.0
+    min_x_velocity_threshold: 0.02
+    min_y_velocity_threshold: 0.02
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 5.0
+    progress_checker_plugin: progress_checker
+    current_goal_checker: general_goal_checker
+    goal_checker_plugins: [general_goal_checker]
+    controller_plugins: [FollowPath]
+    progress_checker:
+      plugin: nav2_controller::SimpleProgressChecker
+      required_movement_radius: 0.1
+      movement_time_allowance: 10.0
+    general_goal_checker:
+      plugin: nav2_controller::SimpleGoalChecker
+      stateful: true
+      xy_goal_tolerance: 0.2
+      yaw_goal_tolerance: 3.15
+    FollowPath:
+      plugin: nav2_a_star_rpp::RegulatedPurePursuitController
+      desired_linear_vel: 1.0
+      lookahead_dist: 1.3
+      use_interpolation: true
+      max_linear_accel: 0.30
+      max_linear_decel: 0.60
+      use_regulated_linear_velocity_scaling: true
+      regulated_linear_scaling_min_radius: 3.0
+      regulated_linear_scaling_min_speed: 0.25
+      use_cost_regulated_linear_velocity_scaling: false
+      cost_scaling_dist: 0.6
+      cost_scaling_gain: 1.0
+      inflation_cost_scaling_factor: 3.0
+      # A cell is treated as lethal only when the costmap reports a true
+      # inscribed/lethal obstacle (>=253). The previous 200 rejected the whole
+      # inflated band around a 0.7 m doorway and left ~0.11 m of usable width.
+      lethal_cost: 253
+      # 车体所在格被代价地图判成内切(253)时，Theta* 会因起点致命而无解；
+      # 允许向半径 0.8 m 内的最近安全格松弛起步，避免原地卡死且无法重规划。
+      start_relax_radius: 0.80
+      traversal_cost_weight: 3.0
+      path_smoothing_enabled: true
+      smoothing_max_iterations: 100
+      smoothing_tolerance: 0.0001
+      smoothing_data_weight: 0.20
+      smoothing_smooth_weight: 0.30
+      smoothing_max_deviation: 0.50
+      smoothing_collision_step: 0.025
+      smoothing_backtracking_steps: 6
+      min_approach_linear_velocity: 0.05
+      approach_velocity_scaling_dist: 1.0
+      use_collision_detection: true
+      max_allowed_time_to_collision_up_to_carrot: 1.0
+      # 基于代价地图 LETHAL_OBSTACLE(254) 的前向停车保护：253 是内切膨胀带，
+      # 窄道/门区里整片地面都是 253，用它测距会把地面当墙；254 才是坡度层标记
+      # 的真障碍。0.45 m 停车净空让车在顶到障碍前留出更明显的间距，1.05 m 起
+      # 线性降速，半宽 0.20 m 只覆盖车体（0.23 m）并把门洞两侧 0.35 m 处的门框排除在外。
+      front_stop_clearance: 0.45
+      front_slow_clearance: 1.05
+      front_stop_half_width: 0.20
+      # 前向受阻连续 3 拍（10 Hz 下约 0.3 s）后触发层 1 后退自救。
+      recovery_front_block_cycles: 3
+      use_rotate_to_heading: true
+      rotate_to_heading_angular_vel: 0.5
+      rotate_to_heading_min_angle: 0.5
+      max_angular_accel: 1.57
+      allow_reversing: false
+      transform_tolerance: 0.5
+      max_robot_pose_search_dist: 10.0
+      prefer_planner_polyline_when_clear: true
+      polyline_collision_check_resolution: 0.05
+      polyline_track_max_length: 15.0
+      publish_global_path_slice_freeze: true
+      publish_merge_connection_point: true
+      # 门区三阶段（ALIGN/CROSS/EXIT）+ 门框测距伺服：门宽 0.70 m 小于
+      # 常规判障所需的净宽，进入门区后由控制器直接用左右门柱内缘测距接管。
+      door_servo_enabled: true
+      # 相对话题名，由 controller_server 的 cur_lid 重映射解析。
+      door_cloud_topic: cur_lid
+      door_cloud_timeout: 0.5
+      door_detect_range: 2.6
+      door_detect_half_width: 1.2
+      door_min_height: 0.4
+      door_max_height: 2.6
+      door_min_width: 0.55
+      door_max_width: 1.15
+      door_enter_distance: 2.2
+      door_align_angle: 0.08
+      door_align_rate: 0.45
+      door_cross_speed: 0.30
+      door_lateral_gain: 1.6
+      door_max_angular: 0.45
+      door_exit_margin: 0.35
+      door_exit_hold: 0.40
+      # 距门框小于该值后锁存直行：门柱内缘会擦过激光视线，测宽会失真。
+      door_hold_distance: 0.50
+      door_min_points: 5
+      # 已知门心（map 系，平坦 [x,y]）。窄门是 world 中的固定静态特征，据此
+      # 在 LiDAR 尚未看到门柱时就启动 PRE_ALIGN，避免拐角过冲后朝向背离门而卡死。
+      door_positions: [10.5, 8.0]
+      # 卡死自救：顶住障碍（持续预测碰撞 / 有速度无位移 / 局部规划连续无解）时，
+      # 先沿车尾方向后退一小段，再清空绕障态从新位姿重新规划。
+      recovery_enabled: true
+      recovery_backup_distance: 0.35
+      recovery_backup_speed: 0.12
+      # 后退终点之外还要保留的净空；车尾走廊不足时不退，避免把车退进墙里。
+      recovery_rear_clearance: 0.10
+      recovery_stuck_time: 1.5
+      recovery_stuck_translation: 0.05
+      recovery_max_cycles: 2
+      recovery_retrigger_window: 10.0
+      recovery_collision_cycles: 5
+      recovery_no_path_cycles: 3
+
+/**/local_costmap:
+  local_costmap:
+    ros__parameters:
+      use_sim_time: true
+      update_frequency: 20.0
+      publish_frequency: 10.0
+      global_frame: map
+      robot_base_frame: base_link
+      rolling_window: true
+      width: 10
+      height: 10
+      resolution: 0.05
+      # URDF collision envelope about base_footprint/base_link: wheels
+      # x=[-0.23, 0.23], y=[-0.23, 0.23]; front LiDAR reaches x=0.275.
+      # Nav2's existing default footprint_padding=0.01 m remains in effect.
+      footprint: '[[0.275,0.23],[0.275,-0.23],[-0.23,-0.23],[-0.23,0.23]]'
+      plugins: [slope_traversability_layer, inflation_layer]
+      slope_traversability_layer:
+        plugin: nav2_costmap_2d::SlopeTraversabilityLayer
+        enabled: true
+        pointcloud_topic: cur_lid
+        max_slope_deg: 20.0
+        max_step_height: 0.10
+        max_ground_residual: 0.06
+        obstacle_height: 0.12
+        max_range: 3.0
+        neighborhood_radius: 0.45
+        cloud_timeout: 0.5
+        min_neighbors: 4
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer
+        enabled: true
+        # 0.45 m keeps a small safety margin around the 0.23 m inscribed
+        # radius without flooding both sides of a 0.7 m doorway.
+        inflation_radius: 0.45
+        cost_scaling_factor: 5.0
+      always_send_full_costmap: true
+
+/**/nav2_log_record:
+  ros__parameters:
+    log_output: both
+    log_level: info
+    log_event_topic: log/event
+    log_record_topic: log/record
+
+/**/lifecycle_manager_navigation:
+  ros__parameters:
+    autostart: true
+    bond_timeout: 10.0
+    node_names: [nav2_log_record, nav2_input_bridge, net_planner_action_server, controller_server, net_navigator]

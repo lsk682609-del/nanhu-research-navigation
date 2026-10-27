@@ -1,0 +1,5 @@
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source /opt/ros/humble/setup.bash
+source "${SCRIPT_DIR}/install/setup.bash"
+
+ros2 launch ros2can car_driver.launch.py

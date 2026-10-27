@@ -1,0 +1,19 @@
+map:
+0 default
+lla_mode:
+0
+node:
+0 0 0 0 0 0 nan nan nan
+1 0 0 4.69999980926514 0 0 nan nan nan
+2 0 0 8.5 -37.5 0 nan nan nan
+3 0 0 24 -46 0 nan nan nan
+4 0 0 21 -63 0 nan nan nan
+5 0 0 11 -64 0 nan nan nan
+6 0 0 9 -29 0 nan nan nan
+edge:
+0 0 0 0 1 0
+1 0 0 1 2 0
+2 0 0 2 5 0
+3 0 0 5 4 0
+4 0 0 4 3 0
+5 0 0 3 6 0
