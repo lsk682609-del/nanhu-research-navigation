@@ -1,0 +1,139 @@
+<?xml version='1.0'?>
+<sdf version='1.7'>
+  <world name='default'>
+    <!-- 太阳光：没有它 Gazebo 里是黑的 -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- 地面：100m x 100m 的无限平面 -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- 墙：100m x 100m 的无限平面 -->
+        <model name="wall_south">
+      <static>true</static>
+      <pose>10 0 1.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>20 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>20 0.15 2.5</size></box></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+     <model name="wall_north">
+      <static>true</static>
+      <pose>10 20 1.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>20 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>20 0.15 2.5</size></box></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+     <model name="wall_west">
+      <static>true</static>
+      <pose>0 10 1.25 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>20 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>20 0.15 2.5</size></box></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+     <model name="wall_east">
+      <static>true</static>
+      <pose>20 10 1.25 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>20 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>20 0.15 2.5</size></box></geometry>
+          <material><ambient>0.6 0.6 0.6 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+     <!-- 红色障碍物：0.5m x 0.5m 的障碍物 -->
+        <model name="box_obstacle">
+      <static>true</static>
+      <pose>5 9.5 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+        <geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+          <material><ambient>0.8 0.3 0.3 1</ambient><diffuse>0.8 0.3 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+     <!-- 门：0.15m x 1.0m x 2.0m 的门 -->
+        <model name="gate_west">
+      <static>true</static>
+      <pose>10.5 7.15 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 1.0 2.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 1.0 2.0</size></box></geometry>
+          <material><ambient>0.9 0.8 0.2 1</ambient><diffuse>0.9 0.8 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="gate_east">
+      <static>true</static>
+      <pose>10.5 8.85 1.0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.15 1.0 2.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 1.0 2.0</size></box></geometry>
+          <material><ambient>0.9 0.8 0.2 1</ambient><diffuse>0.9 0.8 0.2 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- 15° 上坡 + 1m 平台 + 15° 下坡，总长 5m，脊高 0.5359m -->
+    <model name="slope_15deg_hill">
+      <static>true</static>
+      <pose>5 3.5 0 1.5708 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <polyline>
+              <height>2.0</height>
+              <point>0 0</point>
+              <point>2 0.5359</point>
+              <point>3 0.5359</point>
+              <point>5 0</point>
+            </polyline>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <polyline>
+              <height>2.0</height>
+              <point>0 0</point>
+              <point>2 0.5359</point>
+              <point>3 0.5359</point>
+              <point>5 0</point>
+            </polyline>
+          </geometry>
+          <material><ambient>0.4 0.6 0.8 1</ambient><diffuse>0.4 0.6 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
