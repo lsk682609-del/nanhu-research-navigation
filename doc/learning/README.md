@@ -38,16 +38,16 @@
 
 | 阶段 | 主题 | 状态 | 笔记 | 验收通过 |
 | --- | --- | --- | --- | --- |
-| 0 | 环境与调试基本功 | 未开始 | [stage-00](notes/stage-00-environment.md) | ☐ |
-| 1 | Gazebo：会造世界 | 未开始 | [stage-01](notes/stage-01-gazebo-world.md) | ☐ |
-| 2 | RViz 可视化 | 未开始 | [stage-02](notes/stage-02-rviz.md) | ☐ |
-| 3 | 定位与 TF | 未开始 | [stage-03](notes/stage-03-tf.md) | ☐ |
-| 4 | 拓扑路网与全局规划 | 未开始 | [stage-04](notes/stage-04-topo-plan.md) | ☐ |
-| 5 | 代价地图与可通行性 | 未开始 | [stage-05](notes/stage-05-costmap.md) | ☐ |
-| 6 | 控制器（门区/自救/停车保护） | 未开始 | [stage-06](notes/stage-06-controller.md) | ☐ |
-| 7 | 状态机与对外接口 | 未开始 | [stage-07](notes/stage-07-state-machine.md) | ☐ |
-| 8 | 参数化与多场景 | 未开始 | [stage-08](notes/stage-08-params.md) | ☐ |
-| 9 | 工程化与协作 | 未开始 | [stage-09](notes/stage-09-engineering.md) | ☐ |
+| 0 | 环境与调试基本功 | 已验收 | [stage-00](notes/stage-00-environment.md) | ☑ |
+| 1 | Gazebo：会造世界 | 已验收 | [stage-01](notes/stage-01-gazebo-world.md) | ☑ |
+| 2 | RViz 可视化 | 已验收 | [stage-02](notes/stage-02-rviz.md) | ☑ |
+| 3 | 定位与 TF | 已验收 | [stage-03](notes/stage-03-tf.md) | ☑ |
+| 4 | 拓扑路网与全局规划 | 已验收 | [stage-04](notes/stage-04-topo-plan.md) | ☑ |
+| 5 | 代价地图与可通行性 | 进行中 | [stage-05](notes/stage-05-costmap.md) | ◐ |
+| 6 | 控制器（门区/自救/停车保护） | 进行中 | [stage-06](notes/stage-06-controller.md) | ◐ |
+| 7 | 状态机与对外接口 | 进行中 | [stage-07](notes/stage-07-state-machine.md) | ◐ |
+| 8 | 参数化与多场景 | 已验收 | [stage-08](notes/stage-08-params.md) | ☑ |
+| 9 | 工程化与协作 | 进行中 | [stage-09](notes/stage-09-engineering.md) | ◐ |
 | 10 | 视觉与相机（选修） | 未开始 | [stage-10](notes/stage-10-vision.md) | ☐ |
 | C | Capstone 复刻新场景 | 未开始 | [capstone](notes/capstone-report.md) | ☐ |
 

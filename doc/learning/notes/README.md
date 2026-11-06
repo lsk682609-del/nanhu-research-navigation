@@ -12,16 +12,16 @@
 
 | 阶段 | 文件 | 状态 |
 | --- | --- | --- |
-| 0 | [stage-00-environment.md](stage-00-environment.md) | 进行中 |
-| 1 | [stage-01-gazebo-world.md](stage-01-gazebo-world.md) | 待开始 |
-| 2 | [stage-02-rviz.md](stage-02-rviz.md) | 待开始 |
-| 3 | [stage-03-tf.md](stage-03-tf.md) | 待开始 |
-| 4 | [stage-04-topo-plan.md](stage-04-topo-plan.md) | 待开始 |
-| 5 | [stage-05-costmap.md](stage-05-costmap.md) | 待开始 |
-| 6 | [stage-06-controller.md](stage-06-controller.md) | 待开始 |
-| 7 | [stage-07-state-machine.md](stage-07-state-machine.md) | 待开始 |
-| 8 | [stage-08-params.md](stage-08-params.md) | 待开始 |
-| 9 | [stage-09-engineering.md](stage-09-engineering.md) | 待开始 |
+| 0 | [stage-00-environment.md](stage-00-environment.md) | 已验收 |
+| 1 | [stage-01-gazebo-world.md](stage-01-gazebo-world.md) | 已验收 |
+| 2 | [stage-02-rviz.md](stage-02-rviz.md) | 已验收 |
+| 3 | [stage-03-tf.md](stage-03-tf.md) | 已验收 |
+| 4 | [stage-04-topo-plan.md](stage-04-topo-plan.md) | 已验收 |
+| 5 | [stage-05-costmap.md](stage-05-costmap.md) | 进行中 |
+| 6 | [stage-06-controller.md](stage-06-controller.md) | 进行中 |
+| 7 | [stage-07-state-machine.md](stage-07-state-machine.md) | 进行中 |
+| 8 | [stage-08-params.md](stage-08-params.md) | 已验收 |
+| 9 | [stage-09-engineering.md](stage-09-engineering.md) | 进行中 |
 | 10 | [stage-10-vision.md](stage-10-vision.md) | 待开始 |
 | C | [capstone-report.md](capstone-report.md) | 待开始 |
 
