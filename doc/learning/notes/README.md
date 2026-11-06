@@ -21,8 +21,8 @@
 | 6 | [stage-06-controller.md](stage-06-controller.md) | 进行中 |
 | 7 | [stage-07-state-machine.md](stage-07-state-machine.md) | 进行中 |
 | 8 | [stage-08-params.md](stage-08-params.md) | 已验收 |
-| 9 | [stage-09-engineering.md](stage-09-engineering.md) | 进行中 |
+| 9 | [stage-09-engineering.md](stage-09-engineering.md) | 已验收 |
 | 10 | [stage-10-vision.md](stage-10-vision.md) | 待开始 |
-| C | [capstone-report.md](capstone-report.md) | 待开始 |
+| C | [capstone-report.md](capstone-report.md) | 进行中 |
 
 > 截图统一放 `assets/`，命名 `stage-XX-<说明>.png`；若目录不存在：`mkdir -p doc/learning/notes/assets`。

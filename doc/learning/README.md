@@ -47,9 +47,9 @@
 | 6 | 控制器（门区/自救/停车保护） | 进行中 | [stage-06](notes/stage-06-controller.md) | ◐ |
 | 7 | 状态机与对外接口 | 进行中 | [stage-07](notes/stage-07-state-machine.md) | ◐ |
 | 8 | 参数化与多场景 | 已验收 | [stage-08](notes/stage-08-params.md) | ☑ |
-| 9 | 工程化与协作 | 进行中 | [stage-09](notes/stage-09-engineering.md) | ◐ |
-| 10 | 视觉与相机（选修） | 未开始 | [stage-10](notes/stage-10-vision.md) | ☐ |
-| C | Capstone 复刻新场景 | 未开始 | [capstone](notes/capstone-report.md) | ☐ |
+| 9 | 工程化与协作 | 已验收 | [stage-09](notes/stage-09-engineering.md) | ☑ |
+| 10 | 视觉与相机（选修） | 暂缓 | [stage-10](notes/stage-10-vision.md) | ☐ |
+| C | Capstone 复刻新场景 | 进行中 | [capstone](notes/capstone-report.md) | ◐ |
 
 ---
 
