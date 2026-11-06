@@ -152,7 +152,7 @@ logs/recorder.csv     715 KB
 ## 10. 产出
 
 - [x] [scripts/goal.sh](file:///home/lxh/nanhu-research-navigation/scripts/goal.sh)（含服务检查、超时、命名空间）
-- [x] 4 组合规提交 + 1 次 merge 提交
+- [x] 5 次常规提交 + 1 次 merge 提交
 - [x] 冲突演练记录（[conflict-demo.txt](file:///home/lxh/nanhu-research-navigation/doc/learning/notes/conflict-demo.txt)）
 - [x] 日志路径与证据
 
