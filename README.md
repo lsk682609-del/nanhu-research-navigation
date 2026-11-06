@@ -294,14 +294,18 @@ sudo apt install -y ros-humble-desktop ros-humble-navigation2 ros-humble-gazebo-
 ```bash
 # 1) 仿真依赖（Gazebo 模型 / Livox / RealSense 插件）
 cd src/gazebo_sim
-colcon build --symlink-install
+colcon build --symlink-install --cmake-args -DDISTRO_ROS=${ROS_DISTRO:-humble}
 source install/setup.bash
 
-# 2) 主工作空间
+# 2) 主工作空间（脚本会自动带上 BUILD_TESTING=OFF 与 DISTRO_ROS）
 cd ../..
-colcon build --symlink-install --cmake-args -DBUILD_TESTING=OFF
+source src/gazebo_sim/install/setup.bash   # 必须先 source，否则找不到 livox_interfaces2
+./scripts/build.sh
 source install/setup.bash
 ```
+
+> `livox_ros_driver2` 依赖 CMake 变量 `DISTRO_ROS`（取 `$ROS_DISTRO`）。漏掉时会在
+> `CMake Generate step` 报 `LIVOX_INTERFACES_INCLUDE_DIRECTORIES ... NOTFOUND`。
 
 只改控制器时可增量编译：
 
@@ -417,6 +421,9 @@ RViz 中也可用 `2D Goal Pose` 工具直接点选（Fixed Frame 必须是 `map
 
 | 文档 | 内容 |
 | --- | --- |
+| [doc/learning/README.md](doc/learning/README.md) | **学习中心**：从零复刻的分阶段计划、进度打卡、笔记模板与术语速查 |
+| [doc/learning/PLAN.md](doc/learning/PLAN.md) | 阶段 0–10 + Capstone 的详细学习计划（任务、命令、验收、常见坑） |
+| [doc/git-workflow.md](doc/git-workflow.md) | 团队 Git 协作规范：分支模型、提交规范、PR 评审、冲突处理与凭据安全 |
 | [doc/PROJECT_GUIDE.md](doc/PROJECT_GUIDE.md) | 项目总览：架构、节点职责、话题数据流、配置入口 |
 | [doc/nav_system.md](doc/nav_system.md) | 导航系统说明与节点数据流图 |
 | [doc/GAZEBO_NET_NAV.md](doc/GAZEBO_NET_NAV.md) | Gazebo 路网导航：坐标、地图、TF 与启动方式 |
