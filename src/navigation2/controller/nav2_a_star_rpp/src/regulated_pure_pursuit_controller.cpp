@@ -1506,14 +1506,18 @@ bool RegulatedPurePursuitController::frontStopActive(
     return true;
   }
   front_block_cycles_ = 0;
-  RCLCPP_WARN(
-    logger_, "[安全] 车头净空 %.2f m 持续不足（要求 %.2f m），触发层1后退自救",
+  // 自救用尽后本函数会每 3 个控制周期抛一次异常，日志必须节流，
+  // 否则 controller_server 的 failure_tolerance 等待期内会刷满同一条警告。
+  RCLCPP_WARN_THROTTLE(
+    logger_, *clock_, 2000,
+    "[安全] 车头净空 %.2f m 持续不足（要求 %.2f m），触发层1后退自救",
     front_clear, front_stop_clearance_);
   // 停住时 last_linear_command_ 为 0，“有速度无位移”判据不会触发，
   // 因此前向受阻必须自己触发自救，否则车会一直停在障碍前不重规划。
   if (startRecovery("车头净空持续不足", pose)) {return true;}
-  RCLCPP_WARN(
-    logger_, "[恢复] 车头持续受阻且自救次数已用尽，交回全局路径重新规划");
+  RCLCPP_WARN_THROTTLE(
+    logger_, *clock_, 2000,
+    "[恢复] 车头持续受阻且自救次数已用尽，交回全局路径重新规划");
   throw nav2_core::PlannerException(
           "front blocked: clearance below limit after recovery exhausted");
 }
@@ -1951,8 +1955,10 @@ void RegulatedPurePursuitController::updateDoorPhase(
           door_obs_.x, door_obs_.y, door_obs_.width);
       } else if (known) {
         door_phase_ = DoorPhase::PRE_ALIGN;
-        RCLCPP_INFO(
-          logger_, "[门区] NONE->PRE_ALIGN he=%.2f lat=%.2f along=%.2f",
+        // 受阻抛异常时会复位门区，本转换会被反复触发，节流避免刷屏。
+        RCLCPP_INFO_THROTTLE(
+          logger_, *clock_, 1000,
+          "[门区] NONE->PRE_ALIGN he=%.2f lat=%.2f along=%.2f",
           door_corridor_heading_err_, door_corridor_lateral_err_, corridor_along);
       }
       break;

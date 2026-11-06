@@ -504,7 +504,10 @@ void ControllerServer::computeAndPublishVelocity()
     last_valid_cmd_time_ = now();
   } catch (nav2_core::PlannerException & e) {
     if (failure_tolerance_ > 0 || failure_tolerance_ == -1.0) {
-      RCLCPP_WARN(this->get_logger(), "%s", e.what());
+      // 插件在前向受阻时每几个控制周期抛一次同样的异常，等待容差期内
+      // 若不节流，同一条告警会以 10 Hz 刷屏，掩盖真正的恢复事件。
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(), *get_clock(), 1000, "%s", e.what());
       cmd_vel_2d.twist.angular.x = 0;
       cmd_vel_2d.twist.angular.y = 0;
       cmd_vel_2d.twist.angular.z = 0;
